@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>有向數大師挑戰賽 (Directed Number Master Challenge)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a; 
+            --bg-medium: #1e293b; 
+            --primary: #4f46e5; 
+            --highlight: #f59e0b; 
+            --text-light: #f1f5f9; 
+            --text-dark: #1e293b;
+            --correct: #22c55e; 
+            --wrong: #ef4444; 
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at center, var(--bg-medium) 0%, var(--bg-dark) 70%);
+            overflow: hidden;
+        }
+
+        .hidden { display: none !important; }
+
+        #game-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 95vh;
+            background-color: var(--bg-medium);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+            border: 2px solid var(--highlight);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        /* Screen Styles */
+        #role-screen, #host-setup-screen, #player-join-screen, #waiting-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            overflow-y: auto;
+        }
+        h1, h2 {
+            color: var(--highlight);
+            text-shadow: 0 0 10px var(--highlight);
+        }
+        .input-group {
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        input[type="text"], input[type="password"], select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 10px var(--highlight);
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--bg-dark);
+            background-image: linear-gradient(to right, #facc15, #f59e0b);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            text-transform: uppercase;
+            margin: 10px;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        button.secondary-btn {
+            background-image: linear-gradient(to right, #94a3b8, #64748b);
+            color: white;
+        }
+        
+        #btn-host, #btn-player {
+            font-size: 1.5em;
+            padding: 20px 40px;
+            width: 250px;
+        }
+
+        /* Game Area Styles */
+        #game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        #timer-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--highlight);
+            background: #000;
+            padding: 5px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--highlight);
+            text-shadow: 0 0 5px var(--highlight);
+        }
+        #question-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(2em, 8vw, 4.5em);
+            font-weight: bold;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Player List View */
+        #player-list-container, #host-controls, #waiting-player-list {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+        .player-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: var(--bg-medium);
+            border-radius: 5px;
+            border-left: 5px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+        .player-card.leader {
+            border-left-color: var(--highlight);
+            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--highlight);
+        }
+        .player-name::after {
+            content: '👑';
+            display: none;
+            color: var(--highlight);
+        }
+        .player-card.leader .player-name::after {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .player-status {
+            font-style: italic;
+            color: #aaa;
+        }
+        .player-status.ready {
+            color: var(--correct);
+            font-weight: bold;
+        }
+        .player-score {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .player-card .cards {
+            display: flex;
+        }
+        .card-icon {
+            width: 20px;
+            height: 28px;
+            margin-left: 5px;
+            border-radius: 3px;
+            border: 1px solid #333;
+        }
+        .yellow { background-color: #f59e0b; }
+        .red { background-color: #ef4444; }
+
+        /* Player Controls (Keypad) */
+        #player-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto repeat(4, 1fr);
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-dark);
+            border-radius: 10px;
+            position: relative;
+            margin-top: 15px;
+        }
+        .keypad-btn {
+            font-size: 1.8em;
+            background-color: var(--bg-medium);
+            color: var(--text-light);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px 0;
+        }
+        #answer-display { 
+            grid-column: 1 / 4;
+            background: #000;
+            text-align: right;
+            padding: 0 15px;
+            font-size: 2em;
+            border-radius: 5px;
+            border: 1px solid var(--highlight);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 60px;
+        }
+        #submit-btn { grid-column: 4 / 5; grid-row: 1 / 6; font-size: 1.5em; background-color: var(--correct); animation: pulse 2s infinite; }
+        #clear-btn { grid-column: 3 / 4; grid-row: 5 / 6; }
+        #minus-btn { grid-column: 2 / 3; grid-row: 5 / 6; }
+        #zero-btn { grid-column: 1 / 2; grid-row: 5 / 6; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        /* Modal / Overlay Styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: var(--bg-medium);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid var(--highlight);
+            box-shadow: 0 0 30px var(--highlight);
+            animation: fadeIn 0.5s ease;
+            width: 90%;
+            max-width: 600px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        #answer-reveal-modal .submitted-by { color: var(--highlight); }
+        #answer-reveal-modal .submitted-answer { font-size: 2em; margin: 10px; }
+        #answer-reveal-modal .stamp { 
+            font-size: 3em; 
+            font-weight: bold; 
+            margin: 10px 0;
+            transform: rotate(-15deg);
+            animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes stampIn {
+            from { opacity: 0; transform: scale(3) rotate(45deg); }
+            to { opacity: 1; transform: scale(1) rotate(-15deg); }
+        }
+        #answer-reveal-modal .stamp.correct { color: var(--correct); text-shadow: 0 0 10px var(--correct); }
+        #answer-reveal-modal .stamp.wrong { color: var(--wrong); text-shadow: 0 0 10px var(--wrong); }
+
+        #correct-answer-steps {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            text-align: left;
+            background: var(--bg-dark);
+            padding: 15px;
+            border-radius: 5px;
+            opacity: 0;
+            animation: typeIn 1s steps(40, end) forwards;
+            animation-delay: 0.5s;
+        }
+         @keyframes typeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        #red-card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            font-weight: bold;
+            z-index: 10;
+            border-radius: 10px;
+        }
+        
+        #winner-overlay .modal h2 { font-size: 3em; }
+        #final-scores { margin-top: 20px; }
+
+        /* Language-specific styles */
+        body:lang(zh) { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
+        body:lang(en) .keypad-btn, body:lang(en) #next-q-btn { font-size: 1.2em; }
+    </style>
+</head>
+<body lang="zh">
+
+    <div id="game-container">
+
+        <!-- ===== ROLE SELECTION SCREEN ===== -->
+        <div id="role-screen">
+            <h1 data-lang-key="title">有向數大師挑戰賽</h1>
+            <div class="input-group" style="flex-direction: column; gap: 20px; margin-top: 40px;">
+                <button id="btn-host" data-lang-key="imHost">我是主持</button>
+                <button id="btn-player" data-lang-key="imPlayer">我是玩家</button>
+            </div>
+        </div>
+
+        <!-- ===== HOST SETUP SCREEN ===== -->
+        <div id="host-setup-screen" class="hidden">
+            <h2 data-lang-key="hostSetup">主持設定</h2>
+            
+            <div class="input-group">
+                <label data-lang-key="language">語言: </label>
+                <select id="language-select">
+                    <option value="zh">繁體中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label data-lang-key="gameMode">比賽模式: </label>
+                <select id="game-mode">
+                    <option value="time" data-lang-key="timeLimitMode">限時模式</option>
+                    <option value="score" data-lang-key="targetScoreMode">目標分數模式</option>
+                </select>
+            </div>
+            
+            <div class="input-group" id="time-limit-group">
+                <label data-lang-key="time">時間: </label>
+                <select id="time-limit">
+                    <option value="180">3 Minutes</option>
+                    <option value="300" selected>5 Minutes</option>
+                    <option value="600">10 Minutes</option>
+                </select>
+            </div>
+            <div class="input-group hidden" id="score-limit-group">
+                <label data-lang-key="target">目標: </label>
+                <select id="score-limit">
+                    <option value="5">5 Points</option>
+                    <option value="10" selected>10 Points</option>
+                    <option value="15">15 Points</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label data-lang-key="gameType">遊戲項目: </label>
+                <select id="game-type">
+                    <option value="add_sub" data-lang-key="addSubtract">有向數加減</option>
+                    <option value="mul_div" data-lang-key="multiplyDivide">有向數乘除</option>
+                    <option value="all_four" data-lang-key="fourOperations">有向數四則運算</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label data-lang-key="difficulty">難度: </label>
+                <select id="difficulty">
+                    <option value="1">Level 1</option>
+                    <option value="2">Level 2</option>
+                </select>
+            </div>
+
+            <div class="input-group" style="margin-top: 20px;">
+                <input type="text" id="host-room-name-input" data-lang-placeholder="roomNamePlaceholder" placeholder="輸入房間名稱">
+                <input type="password" id="host-room-password-input" data-lang-placeholder="passwordPlaceholder" placeholder="密碼(可選)">
+            </div>
+            
+            <div class="input-group">
+                <button id="host-back-btn" class="secondary-btn" data-lang-key="back">返回</button>
+                <button id="create-room-btn" data-lang-key="createRoomBtn">建立房間</button>
+            </div>
+            <p id="host-error" style="color: var(--wrong); height: 20px;"></p>
+        </div>
+
+        <!-- ===== PLAYER JOIN SCREEN ===== -->
+        <div id="player-join-screen" class="hidden">
+            <h2 data-lang-key="playerJoin">玩家加入房間</h2>
+            <div class="input-group">
+                <label data-lang-key="language">語言: </label>
+                <select id="player-language-select">
+                    <option value="zh">繁體中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <div class="input-group" style="margin-top: 20px;">
+                <input type="text" id="player-room-name-input" data-lang-placeholder="roomNamePlaceholder" placeholder="輸入房間名稱">
+                <input type="password" id="player-room-password-input" data-lang-placeholder="passwordPlaceholder" placeholder="密碼(可選)">
+            </div>
+            <div class="input-group">
+                <input type="text" id="player-name-input" data-lang-placeholder="playerNamePlaceholder" placeholder="輸入你的名字">
+            </div>
+            <div class="input-group">
+                <button id="player-back-btn" class="secondary-btn" data-lang-key="back">返回</button>
+                <button id="join-room-btn" data-lang-key="joinRoomBtn">加入</button>
+            </div>
+            <p id="player-error" style="color: var(--wrong); height: 20px;"></p>
+        </div>
+
+        <!-- ===== WAITING SCREEN ===== -->
+        <div id="waiting-screen" class="hidden">
+            <h2 id="waiting-title" data-lang-key="waitingForHost">等待開始遊戲...</h2>
+            <h3 data-lang-key="playersInRoom">房間內的玩家</h3>
+            <div id="waiting-player-list"></div>
+            
+            <div class="input-group">
+                <button id="ready-btn" class="hidden" data-lang-key="ready">準備</button>
+                <button id="start-game-btn" class="hidden" disabled data-lang-key="startGame">開始遊戲</button>
+            </div>
+            
+            <p id="waiting-status" style="height: 20px;"></p>
+        </div>
+
+        <!-- ===== MAIN GAME AREA ===== -->
+        <div id="game-area" class="hidden">
+            <div id="top-bar">
+                <div id="timer-display">05:00</div>
+                 <div id="info-display"></div> 
+            </div>
+            <div id="question-container">
+                <span data-lang-key="getReady">準備開始...</span>
+            </div>
+            
+            <!-- Player Keypad View -->
+            <div id="player-controls" class="hidden">
+                <div id="answer-display"></div>
+                <button class="keypad-btn" onclick="inputDigit('1')">1</button>
+                <button class="keypad-btn" onclick="inputDigit('2')">2</button>
+                <button class="keypad-btn" onclick="inputDigit('3')">3</button>
+                <button class="keypad-btn" onclick="inputDigit('4')">4</button>
+                <button class="keypad-btn" onclick="inputDigit('5')">5</button>
+                <button class="keypad-btn" onclick="inputDigit('6')">6</button>
+                <button class="keypad-btn" onclick="inputDigit('7')">7</button>
+                <button class="keypad-btn" onclick="inputDigit('8')">8</button>
+                <button class="keypad-btn" onclick="inputDigit('9')">9</button>
+                <button id="zero-btn" class="keypad-btn" onclick="inputDigit('0')">0</button>
+                <button id="minus-btn" class="keypad-btn" onclick="inputDigit('-')">-</button>
+                <button id="clear-btn" class="keypad-btn" onclick="clearInput()">C</button>
+                <button id="submit-btn" onclick="submitAnswer()" data-lang-key="submit">提交</button>
+                <div id="red-card-overlay" class="hidden"><span data-lang-key="suspended">暫停作答 1 回合</span></div>
+            </div>
+
+            <!-- Host Controls View -->
+            <div id="host-controls" class="hidden">
+                <h3 data-lang-key="playerScores">玩家分數</h3>
+                <div id="host-player-list"></div>
+                <button id="next-q-btn" class="hidden" data-lang-key="nextQuestion">下一題</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== MODALS & OVERLAYS ===== -->
+    <div id="answer-reveal-overlay" class="overlay hidden">
+        <div id="answer-reveal-modal" class="modal">
+            <h3 class="submitted-by"></h3>
+            <p class="submitted-answer"></p>
+            <div class="stamp"></div>
+            <div id="correct-answer-steps"></div>
+        </div>
+    </div>
+
+    <div id="winner-overlay" class="overlay hidden">
+        <div class="modal">
+            <h2 data-lang-key="winner">勝利者!</h2>
+            <h3 id="winner-name"></h3>
+            <div id="final-scores"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK - IMPORTANT! -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getDatabase, ref, onValue, set, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyDgRC4M0WXpbwM6dV1nfPYIJJXdu_WWQ1c",
+        authDomain: "directed-number.firebaseapp.com",
+        databaseURL: "https://directed-number-default-rtdb.firebaseio.com",
+        projectId: "directed-number",
+        storageBucket: "directed-number.appspot.com",
+        messagingSenderId: "722194576154",
+        appId: "1:722194576154:web:5af27c6c60160582e632a3"
+      };
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        console.log("Firebase Initialized Successfully");
+
+        window.db = db;
+        window.dbFuncs = { ref, onValue, set, update, remove, onDisconnect };
+        document.dispatchEvent(new Event('firebase-ready'));
+
+      } catch (e) {
+        console.error("Firebase initialization failed:", e);
+        alert("無法連接伺服器，啟動單機測試模式。");
+        window.runLocalSimulation();
+        document.dispatchEvent(new Event('firebase-ready'));
+      }
+    </script>
+    
+    <script>
+    document.addEventListener('firebase-ready', () => {
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => document.querySelectorAll(selector);
+
+    const elements = {
+        body: $('body'),
+        roleScreen: $('#role-screen'),
+        hostSetupScreen: $('#host-setup-screen'),
+        playerJoinScreen: $('#player-join-screen'),
+        waitingScreen: $('#waiting-screen'),
+        gameArea: $('#game-area'),
+        hostControls: $('#host-controls'),
+        playerControls: $('#player-controls'),
+        
+        // Host Inputs
+        hostLangSelect: $('#language-select'),
+        gameModeSelect: $('#game-mode'),
+        timeLimitGroup: $('#time-limit-group'),
+        scoreLimitGroup: $('#score-limit-group'),
+        timeLimitSelect: $('#time-limit'),
+        scoreLimitSelect: $('#score-limit'),
+        gameTypeSelect: $('#game-type'),
+        difficultySelect: $('#difficulty'),
+        hostRoomNameInput: $('#host-room-name-input'),
+        hostPasswordInput: $('#host-room-password-input'),
+        hostError: $('#host-error'),
+
+        // Player Inputs
+        playerLangSelect: $('#player-language-select'),
+        playerRoomNameInput: $('#player-room-name-input'),
+        playerPasswordInput: $('#player-room-password-input'),
+        playerNameInput: $('#player-name-input'),
+        playerError: $('#player-error'),
+
+        // Buttons
+        btnHost: $('#btn-host'),
+        btnPlayer: $('#btn-player'),
+        hostBackBtn: $('#host-back-btn'),
+        playerBackBtn: $('#player-back-btn'),
+        createRoomBtn: $('#create-room-btn'),
+        joinRoomBtn: $('#join-room-btn'),
+        readyBtn: $('#ready-btn'),
+        startGameBtn: $('#start-game-btn'),
+        submitBtn: $('#submit-btn'),
+        nextQBtn: $('#next-q-btn'),
+
+        // Game Elements
+        waitingPlayerList: $('#waiting-player-list'),
+        timerDisplay: $('#timer-display'),
+        infoDisplay: $('#info-display'),
+        questionContainer: $('#question-container'),
+        answerDisplay: $('#answer-display'),
+        hostPlayerList: $('#host-player-list'),
+        redCardOverlay: $('#red-card-overlay'),
+
+        // Modals
+        answerRevealOverlay: $('#answer-reveal-overlay'),
+        answerRevealModal: $('#answer-reveal-modal'),
+        submittedBy: $('.submitted-by'),
+        submittedAnswer: $('.submitted-answer'),
+        stamp: $('.stamp'),
+        correctAnswerSteps: $('#correct-answer-steps'),
+        winnerOverlay: $('#winner-overlay'),
+        winnerName: $('#winner-name'),
+        finalScores: $('#final-scores'),
+    };
+
+    let currentRoom = null;
+    let currentPlayerId = `player-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    let currentPlayerName = null;
+    let isHost = false;
+    let gameStateListener = null;
+    let localGameState = {};
+    let timerInterval = null;
+    let sounds = {};
+
+    const langStrings = {
+        en: {
+            title: "Directed Number Master Challenge",
+            imHost: "I am Host",
+            imPlayer: "I am Player",
+            hostSetup: "Host Setup",
+            playerJoin: "Join Game",
+            language: "Language: ",
+            createRoomBtn: "Create Room",
+            joinRoomBtn: "Join Room",
+            back: "Back",
+            roomNamePlaceholder: "Enter Room Name",
+            passwordPlaceholder: "Password (Optional)",
+            playerNamePlaceholder: "Enter Your Name",
+            gameMode: "Game Mode: ",
+            timeLimitMode: "Time Limit",
+            targetScoreMode: "Target Score",
+            time: "Time: ",
+            target: "Target: ",
+            gameType: "Game Type: ",
+            addSubtract: "Add/Subtract",
+            multiplyDivide: "Multiply/Divide",
+            fourOperations: "Four Operations",
+            difficulty: "Difficulty: ",
+            playersInRoom: "Players in Room",
+            startGame: "Start Game",
+            waitingForHost: "Waiting for host...",
+            ready: "Ready",
+            getReady: "Get Ready...",
+            submit: "Submit",
+            playerScores: "Player Scores",
+            nextQuestion: "Next Question",
+            suspended: "Suspended for 1 round",
+            winner: "Winner!",
+            submittedBy: "Submitted by: ",
+            correctAnswer: "Correct Answer & Steps:",
+            score: "Score",
+            targetScore: "Target",
+            statusReady: "Ready",
+            statusWaiting: "Waiting",
+            errorName: "Please enter your name.",
+            errorRoomName: "Please enter a room name.",
+            errorRoomNotFound: "Room not found or password incorrect.",
+            errorRoomFull: "This room is full.",
+            errorGameInProgress: "Game is already in progress.",
+            allPlayersReady: "All players are ready!",
+            waitingForPlayers: "Waiting for players...",
+        },
+        zh: {
+            title: "有向數大師挑戰賽",
+            imHost: "我是主持",
+            imPlayer: "我是玩家",
+            hostSetup: "主持設定",
+            playerJoin: "玩家加入房間",
+            language: "語言: ",
+            createRoomBtn: "建立房間",
+            joinRoomBtn: "加入",
+            back: "返回",
+            roomNamePlaceholder: "輸入房間名稱",
+            passwordPlaceholder: "密碼(可選)",
+            playerNamePlaceholder: "輸入你的名字",
+            gameMode: "比賽模式: ",
+            timeLimitMode: "限時模式",
+            targetScoreMode: "目標分數模式",
+            time: "時間: ",
+            target: "目標: ",
+            gameType: "遊戲項目: ",
+            addSubtract: "有向數加減",
+            multiplyDivide: "有向數乘除",
+            fourOperations: "有向數四則運算",
+            difficulty: "難度: ",
+            playersInRoom: "房間內的玩家",
+            startGame: "開始遊戲",
+            waitingForHost: "等待主持開始遊戲...",
+            ready: "準備",
+            getReady: "準備開始...",
+            submit: "提交",
+            playerScores: "玩家分數",
+            nextQuestion: "下一題",
+            suspended: "暫停作答 1 回合",
+            winner: "勝利者!",
+            submittedBy: "作答者: ",
+            correctAnswer: "正確答案及步驟:",
+            score: "分數",
+            targetScore: "目標分數",
+            statusReady: "已準備",
+            statusWaiting: "等待中",
+            errorName: "請輸入你的名字。",
+            errorRoomName: "請輸入房間名稱。",
+            errorRoomNotFound: "找不到房間或密碼錯誤。",
+            errorRoomFull: "房間已滿。",
+            errorGameInProgress: "遊戲已在進行中。",
+            allPlayersReady: "所有玩家已準備就緒！",
+            waitingForPlayers: "等待其他玩家準備...",
+        }
+    };
+    let currentLang = 'zh';
+
+    window.runLocalSimulation = function() {
+        console.warn("FIREBASE NOT CONNECTED. Running in local simulation mode.");
+        let simDB = {};
+        let listeners = {};
+        window.db = null;
+        window.dbFuncs = {
+            ref: (db, path) => path,
+            set: (path, value) => {
+                const pathParts = path.split('/');
+                let current = simDB;
+                for (let i = 0; i < pathParts.length - 1; i++) {
+                    if (!current[pathParts[i]]) current[pathParts[i]] = {};
+                    current = current[pathParts[i]];
+                }
+                current[pathParts[pathParts.length - 1]] = value;
+                if (listeners[path]) listeners[path](value);
+                if (listeners['rooms/' + currentRoom]) listeners['rooms/' + currentRoom](simDB.rooms[currentRoom]);
+            },
+            update: (path, value) => {
+                 const currentVal = window.dbFuncs.get(path);
+                 const newVal = {...currentVal, ...value};
+                 window.dbFuncs.set(path, newVal);
+            },
+            get: (path) => {
+                const pathParts = path.split('/');
+                let current = simDB;
+                for (let i = 0; i < pathParts.length; i++) {
+                    if (current === undefined || current === null) return null;
+                    current = current[pathParts[i]];
+                }
+                return current;
+            },
+            onValue: (path, callback) => {
+                listeners[path] = (data) => {
+                    callback({ val: () => data, exists: () => data !== null && data !== undefined });
+                };
+                setTimeout(() => {
+                    const data = window.dbFuncs.get(path);
+                     if (listeners[path]) listeners[path](data);
+                }, 100);
+            },
+            remove: (path) => window.dbFuncs.set(path, null),
+            onDisconnect: (path) => ({ remove: () => {} })
+        };
+    };
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        elements.body.lang = lang;
+        $$('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (langStrings[lang][key]) el.textContent = langStrings[lang][key];
+        });
+        $$('[data-lang-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-lang-placeholder');
+            if (langStrings[lang][key]) el.placeholder = langStrings[lang][key];
+        });
+    }
+
+    function switchScreen(screenName) {
+        ['roleScreen', 'hostSetupScreen', 'playerJoinScreen', 'waitingScreen', 'gameArea'].forEach(s => elements[s].classList.add('hidden'));
+        if (elements[screenName]) elements[screenName].classList.remove('hidden');
+    }
+    
+    function showError(element, key) {
+        element.textContent = langStrings[currentLang][key] || key;
+        setTimeout(() => element.textContent = '', 3000);
+    }
+
+    function loadSounds() {
+        sounds.click = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.mp3'] });
+        sounds.submit = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-interface-hint-notification-911.mp3'] });
+        sounds.correct = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-game-bonus-reached-2065.mp3'] });
+        sounds.wrong = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3'] });
+        sounds.win = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3'] });
+        sounds.bgm = new Howl({ src: ['https://assets.mixkit.co/music/preview/mixkit-ignite-the-world-115.mp3'], loop: true, volume: 0.3 });
+    }
+
+    const { ref, set, onValue, update, remove, onDisconnect } = window.dbFuncs;
+
+    function createRoom() {
+        currentRoom = elements.hostRoomNameInput.value.trim();
+        currentPlayerName = "Host";
+        
+        if (!currentRoom) return showError(elements.hostError, 'errorRoomName');
+        isHost = true;
+        
+        const roomData = {
+            host: currentPlayerId,
+            password: elements.hostPasswordInput.value,
+            state: 'setup',
+            settings: {
+                mode: elements.gameModeSelect.value,
+                limit: elements.gameModeSelect.value === 'time' ? parseInt(elements.timeLimitSelect.value) : parseInt(elements.scoreLimitSelect.value),
+                type: elements.gameTypeSelect.value,
+                difficulty: elements.difficultySelect.value
+            },
+            players: {
+                [currentPlayerId]: { name: currentPlayerName, score: 2, isReady: true, isHost: true, wrongStreak: 0, suspended: false }
+            }
+        };
+
+        set(ref(db, `rooms/${currentRoom}`), roomData).then(() => {
+            listenToRoom();
+            elements.startGameBtn.classList.remove('hidden');
+            switchScreen('waitingScreen');
+        });
+    }
+
+    function joinRoom() {
+        currentRoom = elements.playerRoomNameInput.value.trim();
+        currentPlayerName = elements.playerNameInput.value.trim();
+        
+        if (!currentRoom) return showError(elements.playerError, 'errorRoomName');
+        if (!currentPlayerName) return showError(elements.playerError, 'errorName');
+
+        onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
+            if (snapshot.exists()) {
+                const roomData = snapshot.val();
+                if (roomData.password && roomData.password !== elements.playerPasswordInput.value) {
+                    return showError(elements.playerError, 'errorRoomNotFound');
+                }
+                if (roomData.state !== 'setup') return showError(elements.playerError, 'errorGameInProgress');
+                if (Object.keys(roomData.players || {}).length >= 10) return showError(elements.playerError, 'errorRoomFull');
+
+                const playerRef = ref(db, `rooms/${currentRoom}/players/${currentPlayerId}`);
+                set(playerRef, { name: currentPlayerName, score: 2, isReady: false, wrongStreak: 0, suspended: false });
+                onDisconnect(playerRef).remove();
+
+                listenToRoom();
+                elements.readyBtn.classList.remove('hidden');
+                switchScreen('waitingScreen');
+            } else {
+                showError(elements.playerError, 'errorRoomNotFound');
+            }
+        }, { onlyOnce: true });
+    }
+
+    function listenToRoom() {
+        if (gameStateListener) return;
+        gameStateListener = onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
+            if (!snapshot.exists()) {
+                alert("房間已關閉。");
+                window.location.reload();
+                return;
+            }
+            localGameState = snapshot.val();
+            updateUI();
+        });
+    }
+
+    function updateGameState(newData) { update(ref(db, `rooms/${currentRoom}`), newData); }
+    
+    function setPlayerReady() {
+        set(ref(db, `rooms/${currentRoom}/players/${currentPlayerId}/isReady`), true);
+        elements.readyBtn.disabled = true;
+        elements.readyBtn.textContent = langStrings[currentLang].statusReady;
+    }
+
+    function startGame() {
+        if (!isHost) return;
+        sounds.bgm.play();
+        updateGameState({
+            state: 'playing',
+            timer: localGameState.settings.mode === 'time' ? localGameState.settings.limit : 0,
+            question: null,
+            answerer: null,
+        });
+        startNewRound();
+    }
+
+    function updateUI() {
+        if (!localGameState) return;
+        const players = localGameState.players || {};
+
+        if (localGameState.state === 'setup' || localGameState.state === 'waiting') {
+            updatePlayerList(elements.waitingPlayerList, players);
+            if (isHost) {
+                const allReady = Object.values(players).every(p => p.isReady);
+                elements.startGameBtn.disabled = !allReady;
+                elements.startGameBtn.textContent = allReady ? langStrings[currentLang].allPlayersReady : langStrings[currentLang].waitingForPlayers;
+            }
+        }
+        else if (localGameState.state === 'playing') {
+            switchScreen('gameArea');
+            if (isHost) {
+                elements.hostControls.classList.remove('hidden');
+                elements.playerControls.classList.add('hidden');
+                updatePlayerList(elements.hostPlayerList, players, true);
+                elements.nextQBtn.classList.toggle('hidden', !localGameState.answerer);
+            } else {
+                elements.hostControls.classList.add('hidden');
+                elements.playerControls.classList.remove('hidden');
+                const myState = players[currentPlayerId];
+                if (myState) {
+                     updateInfoDisplay(myState.score);
+                     elements.redCardOverlay.classList.toggle('hidden', !myState.suspended);
+                     elements.submitBtn.disabled = !!localGameState.answerer || myState.suspended;
+                }
+            }
+
+            if(localGameState.settings.mode === 'time') {
+                const m = Math.floor(localGameState.timer / 60).toString().padStart(2, '0');
+                const s = (localGameState.timer % 60).toString().padStart(2, '0');
+                elements.timerDisplay.textContent = `${m}:${s}`;
+            } else {
+                 elements.timerDisplay.textContent = `${langStrings[currentLang].targetScore}: ${localGameState.settings.limit}`;
+            }
+
+            elements.questionContainer.innerHTML = localGameState.question ? localGameState.question.text.replace(/\//g, '&divide;') : '...';
+
+            if(localGameState.answerer && localGameState.question) {
+                const ans = players[localGameState.answerer.id];
+                const isCorrect = localGameState.answerer.isCorrect;
+                
+                elements.answerRevealOverlay.classList.remove('hidden');
+                elements.submittedBy.textContent = `${langStrings[currentLang].submittedBy} ${ans.name}`;
+                elements.submittedAnswer.textContent = localGameState.answerer.answer;
+                elements.stamp.textContent = isCorrect ? 'CORRECT' : 'WRONG';
+                elements.stamp.className = `stamp ${isCorrect ? 'correct' : 'wrong'}`;
+                
+                elements.correctAnswerSteps.innerHTML = `<strong>${langStrings[currentLang].correctAnswer}</strong><br>${localGameState.question.text} = ${localGameState.question.answer}`;
+                
+                if(!isHost) setTimeout(() => elements.answerRevealOverlay.classList.add('hidden'), 5000);
+            } else {
+                elements.answerRevealOverlay.classList.add('hidden');
+            }
+        }
+        else if(localGameState.state === 'finished') {
+             sounds.bgm.stop();
+             sounds.win.play();
+             elements.winnerOverlay.classList.remove('hidden');
+             const winner = Object.values(players).find(p => p.isWinner);
+             if (winner) elements.winnerName.textContent = winner.name;
+             updatePlayerList(elements.finalScores, players, true);
+        }
+    }
+
+    function updatePlayerList(container, players, showScores = false) {
+        container.innerHTML = '';
+        if (!players) return;
+        const playerArray = Object.entries(players).map(([id, data]) => ({ id, ...data }));
+        const leader = playerArray.reduce((prev, current) => (prev.score > current.score) ? prev : current, {score: -Infinity});
+
+        playerArray.sort((a, b) => b.score - a.score).forEach(player => {
+            if(player.isHost && !showScores) return; // Hide host from waiting list
+            
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            if (player.id === leader.id && leader.score > 2 && showScores) card.classList.add('leader');
+
+            let content = `<div class="player-name">${player.name}</div>`;
+            if (showScores) {
+                 content += `<div class="player-score">${langStrings[currentLang].score}: ${player.score}</div>`;
+            } else {
+                 content += `<div class="player-status ${player.isReady ? 'ready' : ''}">${player.isReady ? langStrings[currentLang].statusReady : langStrings[currentLang].statusWaiting}</div>`;
+            }
+
+            let cardsDiv = '<div class="cards">';
+            if(player.wrongStreak === 1) cardsDiv += '<div class="card-icon yellow"></div>';
+            if(player.wrongStreak >= 2) cardsDiv += '<div class="card-icon red"></div>';
+            cardsDiv += '</div>';
+
+            card.innerHTML = content + cardsDiv;
+            container.appendChild(card);
+        });
+    }
+
+    function updateInfoDisplay(score) {
+        elements.infoDisplay.textContent = localGameState.settings.mode === 'time' 
+            ? `${langStrings[currentLang].score}: ${score}` 
+            : `${langStrings[currentLang].score}: ${score} / ${localGameState.settings.limit}`;
+    }
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        if (localGameState.settings.mode !== 'time') return;
+        timerInterval = setInterval(() => {
+            if (isHost && localGameState.timer > 0 && !localGameState.answerer) {
+                const newTime = localGameState.timer - 1;
+                updateGameState({ timer: newTime });
+                if (newTime <= 0) endGame();
+            }
+        }, 1000);
+    }
+    
+    function startNewRound() {
+        if (!isHost) return;
+        const updates = { 'question': generateQuestion(), 'answerer': null };
+        Object.keys(localGameState.players).forEach(pId => updates[`/players/${pId}/suspended`] = false);
+        updateGameState(updates);
+        startTimer();
+    }
+    
+    function submitAnswer() {
+        const answer = elements.answerDisplay.textContent;
+        if (!answer || !!localGameState.answerer) return;
+
+        sounds.submit.play();
+        const question = localGameState.question;
+        const isCorrect = (parseInt(answer) === question.answer);
+        const playerState = localGameState.players[currentPlayerId];
+        const points = parseInt(localGameState.settings.difficulty) === 1 ? 1 : 2;
+        
+        let newScore = playerState.score;
+        let newWrongStreak = playerState.wrongStreak;
+
+        if(isCorrect) {
+            sounds.correct.play();
+            newScore += points;
+            newWrongStreak = 0;
+        } else {
+            sounds.wrong.play();
+            newScore = Math.max(0, newScore - points);
+            newWrongStreak += 1;
+        }
+        
+        updateGameState({ answerer: { id: currentPlayerId, name: currentPlayerName, answer, isCorrect, newScore, newWrongStreak } });
+        elements.submitBtn.disabled = true;
+        clearInput();
+    }
+
+    function processAnswer() {
+        if (!isHost || !localGameState.answerer) return;
+        clearInterval(timerInterval);
+        const { id, newScore, newWrongStreak } = localGameState.answerer;
+        const updates = { [`/players/${id}/score`]: newScore, [`/players/${id}/wrongStreak`]: newWrongStreak };
+        
+        if (newWrongStreak >= 2) {
+            updates[`/players/${id}/suspended`] = true;
+            updates[`/players/${id}/wrongStreak`] = 0; 
+        }
+
+        updateGameState(updates);
+        if (localGameState.settings.mode === 'score' && newScore >= localGameState.settings.limit) endGame(id);
+        else elements.nextQBtn.classList.remove('hidden');
+    }
+
+    function endGame(winnerId = null) {
+        if (!isHost) return;
+        clearInterval(timerInterval);
+        const players = localGameState.players;
+        
+        if (!winnerId) {
+             let maxScore = -1;
+             for(const [id, player] of Object.entries(players)) {
+                 if (player.score > maxScore) { maxScore = player.score; winnerId = id; }
+             }
+        }
+        updateGameState({ state: 'finished', [`/players/${winnerId}/isWinner`]: true });
+    }
+    
+    let currentInput = "";
+    window.inputDigit = function(digit) {
+        sounds.click.play();
+        if (digit === '-' && currentInput.length > 0) return;
+        if (currentInput.length > 5) return;
+        currentInput += digit;
+        elements.answerDisplay.textContent = currentInput;
+    };
+
+    window.clearInput = function() {
+        sounds.click.play();
+        currentInput = "";
+        elements.answerDisplay.textContent = "";
+    };
+    
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function f(n) { return n < 0 ? `(${n})` : `${n}`; }
+
+    function generateQuestion() {
+        const type = localGameState.settings.type;
+        const level = parseInt(localGameState.settings.difficulty);
+        let q = {};
+        
+        const getAddSub = (lvl) => {
+            if (lvl === 1) return { text: `${f(randInt(-30,30))} ${Math.random()<0.5?'+':'-'} ${f(randInt(-30,30))}` };
+            return { text: `${f(randInt(-50,50))} ${Math.random()<0.5?'+':'-'} ${f(randInt(-50,50))} ${Math.random()<0.5?'+':'-'} ${f(randInt(-50,50))}` };
+        };
+        const getMulDiv = (lvl) => {
+            if (lvl === 1) {
+                if (Math.random() > 0.4) return { text: `${f(randInt(-15,15))} × ${f(randInt(-15,15))}` };
+                let b = randInt(-15, 15) || 1;
+                return { text: `${f(b * randInt(-10,10))} ÷ ${f(b)}` };
+            }
+            let b = randInt(-10, 10) || 1, c = randInt(-10, 10) || 1;
+            let a = b * c * randInt(-5, 5);
+            return { text: `${f(a)} ${Math.random()<0.5?'×':'÷'} ${f(b)} ${Math.random()<0.5?'×':'÷'} ${f(c)}` };
+        };
+        const getAllFour = (lvl) => {
+            if (lvl === 1) {
+                let c = randInt(-10, 10) || 1;
+                if (Math.random() > 0.5) return { text: `${randInt(-20,20)} + ${f(randInt(-10,10))} × ${f(c)}`};
+                return { text: `${randInt(-20,20)} + ${f(c * randInt(-5,5))} ÷ ${f(c)}`};
+            }
+            if (Math.random() > 0.5) return { text: `${f(randInt(-10,10))} × ${f(randInt(-10,10))} + ${f(randInt(-10,10))} × ${f(randInt(-10,10) || 1)}`};
+            let c_new = randInt(-5, 5) || 1;
+            let a_new = randInt(-20, 20);
+            return { text: `(${f(a_new)} + ${f((c_new * randInt(-5,5)) - a_new)}) ÷ ${f(c_new)}`};
+        };
+
+        switch(type) {
+            case 'add_sub': q = getAddSub(level); break;
+            case 'mul_div': q = getMulDiv(level); break;
+            case 'all_four': q = getAllFour(level); break;
+        }
+        
+        try {
+            q.answer = Math.round(eval(q.text.replace(/÷/g, '/').replace(/×/g, '*')));
+            if (!Number.isInteger(q.answer)) return generateQuestion();
+        } catch(e) { return generateQuestion(); }
+        return q;
+    }
+
+    // Events
+    elements.hostLangSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+    elements.playerLangSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+    
+    elements.btnHost.addEventListener('click', () => switchScreen('hostSetupScreen'));
+    elements.btnPlayer.addEventListener('click', () => switchScreen('playerJoinScreen'));
+    elements.hostBackBtn.addEventListener('click', () => switchScreen('roleScreen'));
+    elements.playerBackBtn.addEventListener('click', () => switchScreen('roleScreen'));
+
+    elements.createRoomBtn.addEventListener('click', createRoom);
+    elements.joinRoomBtn.addEventListener('click', joinRoom);
+    elements.readyBtn.addEventListener('click', setPlayerReady);
+    elements.startGameBtn.addEventListener('click', startGame);
+    elements.nextQBtn.addEventListener('click', startNewRound);
+    
+    window.submitAnswer = submitAnswer;
+    
+    if (gameStateListener) {
+        onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
+            if (isHost && snapshot.exists()) {
+                const state = snapshot.val();
+                if (state.answerer && !state.answerer.processed) {
+                     update(ref(db, `rooms/${currentRoom}/answerer`), {processed: true});
+                     processAnswer();
+                }
+            }
+        });
+    }
+
+    elements.gameModeSelect.addEventListener('change', () => {
+        const isTime = elements.gameModeSelect.value === 'time';
+        elements.timeLimitGroup.classList.toggle('hidden', !isTime);
+        elements.scoreLimitGroup.classList.toggle('hidden', isTime);
+    });
+
+    loadSounds();
+    setLanguage('zh'); 
+    switchScreen('roleScreen');
+    
+    }); 
+    </script>
+</body>
+</html>
