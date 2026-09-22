@@ -747,13 +747,25 @@ function hostGenerateNewQuestion(settings) {
 function updatePlayerScores(players) {
     if (!DOMElements.hostPlayerScores) return;
     DOMElements.hostPlayerScores.innerHTML = '';
-    Object.values(players||{}).filter(p => !p.isHost).sort((a,b) => b.score - a.score).forEach(p => {
-        let cards = (p.penaltyCooldown > 0) ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
-        DOMElements.hostPlayerScores.innerHTML += `
-            <div class="flex justify-between items-center bg-slate-800 p-2 md:p-3 rounded-md mb-2 border border-slate-700">
-                <span class="font-bold text-sm md:text-lg">${p.name}</span>
-                <div class="flex items-center gap-1 md:gap-2"><span class="text-md md:text-xl drop-shadow-md">${cards}</span><span class="font-bold font-orbitron text-lg md:text-2xl text-yellow-400">${p.score}</span></div>
-            </div>`;
+    
+    // 將 ID 包含進物件中以便識別自己，再作排序
+    Object.entries(players||{}).filter(([id, p]) => !p.isHost)
+        .map(([id, p]) => ({ id, ...p }))
+        .sort((a,b) => b.score - a.score)
+        .forEach(p => {
+            let cards = (p.penaltyCooldown > 0) ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
+            let isMe = (p.id === localState.playerId);
+            
+            // 如果是自己，增加黃色高亮背景、邊框與特殊文字顏色
+            let bgClass = isMe ? 'bg-slate-700/80 border-yellow-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : 'bg-slate-800 border-slate-700';
+            let nameColor = isMe ? 'text-yellow-300' : 'text-white';
+            let tagText = isMe ? '<span class="text-xs bg-yellow-500/20 text-yellow-300 px-1 py-0.5 rounded ml-1">你</span>' : '';
+            
+            DOMElements.hostPlayerScores.innerHTML += `
+                <div class="flex justify-between items-center ${bgClass} p-2 md:p-3 rounded-md mb-2 border">
+                    <span class="font-bold text-sm md:text-lg ${nameColor}">${p.name} ${tagText}</span>
+                    <div class="flex items-center gap-1 md:gap-2"><span class="text-md md:text-xl drop-shadow-md">${cards}</span><span class="font-bold font-orbitron text-lg md:text-2xl text-yellow-400">${p.score}</span></div>
+                </div>`;
     });
 }
 
@@ -866,13 +878,23 @@ function showWinner(roomData) {
     playSfx('cheer');
     DOMElements.winnerModal.style.display = 'flex';
     DOMElements.finalScores.innerHTML = '';
+    
     const sorted = Object.values(roomData.players).filter(p => !p.isHost).sort((a,b) => b.score - a.score);
-    const ranks = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍'];
-    const colors = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
+    
+    // 使用 Dense Ranking 處理同分狀況 (1, 2, 3...)
+    let currentRank = 0;
+    let lastScore = null;
+    
     sorted.forEach((p, index) => {
-        let rankLabel = index < 3 ? ranks[index] : `第 ${index + 1} 名`;
-        let colorClass = index < 3 ? colors[index] : 'text-slate-400';
-        let marginClass = index < 3 ? 'ml-6 md:ml-8' : 'ml-0 mt-1';
+        if (p.score !== lastScore) {
+            currentRank++;
+            lastScore = p.score;
+        }
+        
+        let rankLabel = currentRank === 1 ? '🥇 冠軍' : (currentRank === 2 ? '🥈 亞軍' : (currentRank === 3 ? '🥉 季軍' : `第 ${currentRank} 名`));
+        let colorClass = currentRank === 1 ? 'text-yellow-400' : (currentRank === 2 ? 'text-gray-300' : (currentRank === 3 ? 'text-amber-600' : 'text-slate-400'));
+        let marginClass = currentRank <= 3 ? 'ml-6 md:ml-8' : 'ml-0 mt-1';
+        
         DOMElements.finalScores.innerHTML += `
             <div class="flex justify-between items-center bg-black/40 p-3 md:p-4 rounded-xl mb-3 w-[100%]">
                 <div class="text-xl md:text-2xl font-bold ${colorClass}">${rankLabel}<br><span class="text-white text-md md:text-lg ${marginClass}">${p.name}</span></div>
