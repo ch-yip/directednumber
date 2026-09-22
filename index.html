@@ -21,8 +21,6 @@ body {
     overflow: hidden;
 }
 .font-orbitron { font-family: 'Orbitron', sans-serif; }
-.font-times { font-family: 'Times New Roman', Times, serif; }
-
 .btn-gold {
     background-image: linear-gradient(to right, #FBBF24 0%, #F59E0B 51%, #FBBF24 100%);
     transition: 0.5s;
@@ -61,13 +59,6 @@ body {
     70% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
     100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
 }
-
-.highlight-player {
-    background-color: rgba(251, 191, 36, 0.15) !important;
-    border-color: #FBBF24 !important;
-    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
-}
-
 .stamp {
     position: absolute;
     top: 50%; left: 50%;
@@ -98,7 +89,6 @@ body {
 .numpad-btn:hover { background: #64748b; color: #fff; }
 .numpad-btn:active { transform: scale(0.95); }
 .error-message { color: #ef4444; font-weight: bold; display: none; margin-top: 0.5rem; }
-
 /* Yellow / Red Cards CSS */
 .yellow-card {
     position: absolute;
@@ -142,6 +132,7 @@ body {
 </style>
 </head>
 <body class="w-screen h-screen flex items-center justify-center">
+
 <div id="app-container" class="w-full h-full max-w-4xl mx-auto p-4 flex flex-col items-center justify-center">
 
 <!-- 1. ROLE SELECTION VIEW -->
@@ -229,21 +220,30 @@ body {
         <h2 class="text-4xl font-bold font-orbitron text-yellow-400">遊戲大廳</h2>
         <p class="text-2xl text-slate-300">房間: <span id="lobby-room-name" class="font-bold"></span></p>
     </div>
-    
-    <div id="lobby-player-list" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"></div>
 
-    <!-- 遊戲規則版面 -->
-    <div id="lobby-rules" class="max-w-xl mx-auto bg-slate-800/80 p-6 rounded-lg text-left mb-6 border border-slate-600 shadow-xl hidden">
-        <h3 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-slate-600 pb-2"><i class="fas fa-scroll mr-2"></i>比賽規則</h3>
-        <ul class="list-disc list-inside text-slate-300 space-y-2 text-lg">
-            <li>每位玩家起始擁有 <span class="text-yellow-400 font-bold">2 分</span> 底分。</li>
-            <li>答對題目加分 (Level 1: <span class="text-green-400">+1分</span>, Level 2: <span class="text-green-400">+2分</span>)。</li>
-            <li>答錯題目扣分 (Level 1: <span class="text-red-400">-1分</span>, Level 2: <span class="text-red-400">-2分</span>)。</li>
-            <li>累積答錯一次獲 <span class="text-yellow-400 font-bold">黃牌 🟨</span> 警告。</li>
-            <li>連續答錯兩次，兩黃變 <span class="text-red-500 font-bold">紅牌 🟥</span>，下一回合將被<span class="text-red-500 font-bold">暫停作答</span>！</li>
-        </ul>
+    <!-- 新增：動態比賽規則面板 -->
+    <div id="lobby-game-rules" class="hidden mx-auto max-w-2xl bg-slate-900/80 border-2 border-slate-600 shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-xl p-6 mb-8">
+        <h3 class="text-2xl font-bold font-orbitron text-yellow-400 mb-4 border-b border-slate-700 pb-2"><i class="fas fa-clipboard-list mr-2"></i> 比賽規則 (Game Rules)</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <p class="text-slate-400 text-sm mb-1">比賽模式</p>
+                <p id="rule-mode-display" class="text-xl font-bold text-white"></p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <p class="text-slate-400 text-sm mb-1">遊戲難度</p>
+                <p id="rule-diff-display" class="text-xl font-bold text-white"></p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2">
+                <p class="text-slate-400 text-sm mb-1">黃紅牌機制</p>
+                <p class="text-md text-slate-200">
+                    答錯 <span class="font-bold text-yellow-400">1</span> 次獲 <span class="font-bold text-yellow-400 bg-black/50 px-2 py-1 rounded">🟨 黃牌警告</span><br>
+                    連續答錯 <span class="font-bold text-red-400">2</span> 次獲 <span class="font-bold text-red-500 bg-black/50 px-2 py-1 rounded">🟥 紅牌 (暫停一回合)</span>
+                </p>
+            </div>
+        </div>
     </div>
 
+    <div id="lobby-player-list" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"></div>
     <div id="lobby-player-controls" class="text-center">
         <button id="btn-player-ready" class="btn-gold text-2xl font-bold py-4 px-10 rounded-lg">準備 (Ready)</button>
     </div>
@@ -265,23 +265,21 @@ body {
             目標分數: <span id="game-score-value" class="font-bold text-xl md:text-2xl text-yellow-400">10</span>
         </div>
     </div>
-
+    
     <!-- Main Game Area -->
     <div class="flex-grow flex flex-col md:flex-row gap-4 mt-4 min-h-0">
-        
-        <!-- 全局顯示: Player Scores Leaderboard (手機版限制高度並可捲動) -->
-        <div id="host-game-view" class="w-full md:w-1/4 bg-slate-900/50 p-2 md:p-4 rounded-lg overflow-y-auto max-h-48 md:max-h-full border-b md:border-b-0 md:border-r border-slate-700">
-            <h3 class="text-xl md:text-2xl font-bold text-yellow-400 mb-4 text-center">實時排行榜</h3>
+        <!-- Host: Player Scores -->
+        <div id="host-game-view" class="w-full md:w-1/4 bg-slate-900/50 p-2 md:p-4 rounded-lg hidden overflow-y-auto">
+            <h3 class="text-xl md:text-2xl font-bold text-yellow-400 mb-4 text-center">玩家分數</h3>
             <div id="host-player-scores" class="space-y-2"></div>
         </div>
-
+        
         <!-- Center Panel: Question & Numpad -->
         <div id="game-center-panel" class="flex-grow flex flex-col items-center justify-center bg-slate-900/50 rounded-lg p-4 md:p-6 relative">
             <div id="question-container" class="mb-6 text-center">
-                <!-- 套用 Times New Roman 字型 -->
-                <p id="question-text" class="text-6xl md:text-8xl font-bold font-times tracking-wider text-white drop-shadow-lg"></p>
+                <p id="question-text" class="text-5xl md:text-7xl font-bold font-orbitron tracking-wider text-white"></p>
             </div>
-
+            
             <!-- Player Numpad View -->
             <div id="player-game-view" class="w-full max-w-xs md:max-w-sm hidden relative mt-4">
                 <!-- Player Name Display -->
@@ -290,7 +288,7 @@ body {
                 </div>
                 <!-- Yellow Card Icon -->
                 <div id="yellow-card" class="yellow-card">警告</div>
-
+                
                 <div id="player-answer-display" class="w-full h-16 md:h-20 bg-slate-800 rounded-t-lg border-2 border-b-0 border-slate-500 text-white text-4xl md:text-5xl text-right p-3 font-orbitron shadow-inner"></div>
                 <div class="grid grid-cols-4 gap-2 bg-slate-800 p-2 border-2 border-t-0 border-slate-500 rounded-b-lg shadow-lg relative">
                     <button class="numpad-btn text-2xl p-4 font-bold" data-key="7">7</button>
@@ -306,7 +304,7 @@ body {
                     <button class="numpad-btn text-2xl p-4 font-bold" data-key="3">3</button>
                     <button class="numpad-btn text-2xl p-4 font-bold text-red-400" data-key="C">C</button>
                     <button class="numpad-btn text-2xl p-4 font-bold col-span-4" data-key="0">0</button>
-
+                    
                     <!-- Red Card Penalty Overlay (Blocks Keypad Input) -->
                     <div id="red-card-overlay" class="red-card-overlay">
                         <div class="red-card mb-4">
@@ -318,14 +316,14 @@ body {
                 </div>
                 <button id="btn-submit-answer" class="btn-gold w-full text-2xl font-black py-4 mt-4 rounded-lg pulse tracking-widest shadow-xl">提交答案</button>
             </div>
-
+            
             <!-- Host Status View -->
             <div id="host-control-view" class="text-center hidden w-full">
                 <p id="host-status-text" class="text-2xl md:text-3xl font-bold text-slate-300 mb-4 animate-pulse">等待玩家搶答...</p>
             </div>
         </div>
     </div>
-
+    
     <!-- Result Modal -->
     <div id="result-modal" style="display: none;" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-40 p-4 backdrop-blur-sm">
         <div id="result-stamp" class="stamp"></div>
@@ -334,16 +332,15 @@ body {
             <p class="mb-4 text-3xl md:text-4xl">提交答案: <span id="result-submitted-answer" class="font-orbitron font-bold"></span></p>
             <hr class="border-slate-700 my-6">
             <p class="mb-2 text-2xl text-green-400 font-bold">正確答案</p>
-            <!-- 套用 Times New Roman 字型 -->
-            <p id="result-correct-answer" class="text-6xl md:text-7xl font-times font-black text-green-300 mb-8 tracking-wider"></p>
+            <p id="result-correct-answer" class="text-5xl md:text-6xl font-orbitron font-black text-green-300 mb-8 tracking-wider"></p>
             <div class="bg-slate-800 p-6 rounded-lg text-left inline-block w-full">
                 <p class="mb-3 text-xl text-yellow-400 font-bold border-b border-slate-600 pb-2"><i class="fas fa-list-ol mr-2"></i>解題步驟</p>
-                <div id="result-steps" class="text-2xl md:text-3xl font-times text-slate-200 leading-relaxed space-y-2"></div>
+                <div id="result-steps" class="text-xl md:text-2xl font-mono text-slate-200 leading-relaxed space-y-2"></div>
             </div>
             <button id="btn-next-question" class="btn-slate text-2xl font-bold py-4 px-12 rounded-lg mt-8 shadow-lg hover:text-yellow-400 transition-colors" style="display: none;">下一題 <i class="fas fa-arrow-right ml-2"></i></button>
         </div>
     </div>
-
+    
     <!-- Winner Modal -->
     <div id="winner-modal" style="display: none;" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50">
         <i class="fas fa-trophy text-8xl text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" style="animation: crown-bounce 1s ease-in-out infinite;"></i>
@@ -413,7 +410,6 @@ const DOMElements = {
     lobbyPlayerList: document.getElementById('lobby-player-list'),
     lobbyPlayerControls: document.getElementById('lobby-player-controls'),
     lobbyHostControls: document.getElementById('lobby-host-controls'),
-    lobbyRules: document.getElementById('lobby-rules'),
     gameHeader: document.getElementById('game-header'),
     gameTimer: document.getElementById('game-timer'),
     gameScoreTarget: document.getElementById('game-score-target'),
@@ -439,19 +435,20 @@ const DOMElements = {
     finalScores: document.getElementById('final-scores'),
 };
 
-// 新增歡呼聲效 (Cheer)
+// SFX with intense esports flavor (更新了錯誤提示與群眾歡呼音效)
 const sfx = {
     click: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_bd27289b9b.mp3'),
     submit: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c34b17.mp3'),
     correct: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'),
-    wrong: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_731c5123a7.mp3'),
+    // 更換為更明確顯著的錯誤音效 (Buzzer)
+    wrong: new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3'), 
     win: new Audio('https://cdn.pixabay.com/audio/2022/11/21/audio_a141b12bce.mp3'),
-    cheer: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3'), // 歡呼聲
-    bgm: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3') // 背景音
+    // 增加群眾歡呼音效用於勝者畫面疊加
+    cheer: new Audio('https://cdn.pixabay.com/audio/2021/08/09/audio_82470a2569.mp3'),
+    bgm: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
 };
 sfx.bgm.loop = true;
-sfx.bgm.volume = 0.2;
-sfx.cheer.volume = 0.6; // 調整歡呼聲大小
+sfx.bgm.volume = 0.3;
 
 function playSfx(sound) {
     if (sfx[sound]) {
@@ -600,7 +597,7 @@ async function handleJoinRoom() {
     const roomData = snapshot.val();
     if (roomData.password && roomData.password !== DOMElements.playerRoomPassword.value.trim()) { alert('密碼錯誤！'); return; }
     if (roomData.status !== 'waiting') { alert('遊戲已開始，無法加入！'); return; }
-
+    
     localState.roomName = roomName;
     localState.playerName = playerName;
     // penaltyCooldown 用來計算暫停的回合數
@@ -610,25 +607,42 @@ async function handleJoinRoom() {
     joinLobby(roomName);
 }
 
+function updateLobbyRules(settings) {
+    const rulesPanel = document.getElementById('lobby-game-rules');
+    const modeDisplay = document.getElementById('rule-mode-display');
+    const diffDisplay = document.getElementById('rule-diff-display');
+    
+    if(rulesPanel && settings) {
+        rulesPanel.classList.remove('hidden');
+        
+        let modeText = '';
+        if (settings.mode === 'time') {
+            modeText = `⏳ 限時模式 (${parseInt(settings.modeValue)/60} 分鐘)`;
+        } else {
+            modeText = `🎯 目標分數 (${settings.modeValue} 分)`;
+        }
+        modeDisplay.innerHTML = modeText;
+        
+        let diffText = settings.difficulty === 'L1' ? '🌟 Level 1 (初階)' : '🔥 Level 2 (進階)';
+        diffDisplay.innerHTML = diffText;
+    }
+}
+
 function joinLobby(roomName) {
     navigateTo('view-lobby');
     DOMElements.lobbyRoomName.textContent = roomName;
-    
-    // 若為玩家，顯示比賽規則區塊
-    if (localState.role === 'player') {
-        DOMElements.lobbyRules.style.display = 'block';
-        DOMElements.lobbyPlayerControls.style.display = 'block';
-        DOMElements.lobbyHostControls.style.display = 'none';
-    } else {
-        DOMElements.lobbyRules.style.display = 'none';
-        DOMElements.lobbyPlayerControls.style.display = 'none';
-        DOMElements.lobbyHostControls.style.display = 'block';
-    }
-
+    DOMElements.lobbyPlayerControls.style.display = localState.role === 'host' ? 'none' : 'block';
+    DOMElements.lobbyHostControls.style.display = localState.role === 'host' ? 'block' : 'none';
     if (localState.roomUnsubscribe) localState.roomUnsubscribe();
     localState.roomUnsubscribe = onValue(ref(db, 'rooms/' + roomName), (snapshot) => {
         const roomData = snapshot.val();
         if (!roomData) return window.location.reload();
+        
+        // 更新大廳的規則面板
+        if (roomData.settings) {
+            updateLobbyRules(roomData.settings);
+        }
+
         updateLobbyPlayerList(roomData.players);
         if (localState.role === 'host') {
             const players = Object.values(roomData.players || {}).filter(p => !p.isHost);
@@ -670,7 +684,7 @@ function startGame(initialRoomData) {
     sfx.bgm.play().catch(e => console.log("BGM blocked:", e));
     setupGameUI(initialRoomData.settings);
     if (localState.role === 'host' && !initialRoomData.current_question) hostGenerateNewQuestion(initialRoomData.settings);
-
+    
     if (localState.gameUnsubscribe) localState.gameUnsubscribe();
     localState.gameUnsubscribe = onValue(ref(db, 'rooms/' + localState.roomName), (snapshot) => {
         const roomData = snapshot.val();
@@ -688,7 +702,7 @@ function startGame(initialRoomData) {
         }
         if (qData && qData.submitted_by) handleAnswerSubmitted(roomData);
         else resetForNewQuestion(roomData);
-
+        
         if (localState.role === 'host' && roomData.settings.mode === 'score') {
             const winner = Object.values(roomData.players).find(p => !p.isHost && p.score >= roomData.settings.modeValue);
             if (winner) update(ref(db, `rooms/${localState.roomName}`), { status: 'finished' });
@@ -699,11 +713,10 @@ function startGame(initialRoomData) {
 function setupGameUI(settings) {
     DOMElements.gameHeader.classList.remove('hidden');
     const isHost = localState.role === 'host';
-    // 現在不論主客都會顯示 hostGameView (現為實時排行榜)
-    DOMElements.hostGameView.style.display = 'block'; 
+    DOMElements.hostGameView.style.display = isHost ? 'block' : 'none';
     DOMElements.hostControlView.style.display = isHost ? 'block' : 'none';
     DOMElements.playerGameView.style.display = isHost ? 'none' : 'block';
-
+    
     if (settings.mode === 'score') {
         DOMElements.gameTimer.style.display = 'none';
         DOMElements.gameScoreTarget.style.display = 'block';
@@ -719,23 +732,14 @@ function hostGenerateNewQuestion(settings) {
 }
 
 function updatePlayerScores(players) {
-    if (!DOMElements.hostPlayerScores) return;
+    if (localState.role !== 'host' || !DOMElements.hostPlayerScores) return;
     DOMElements.hostPlayerScores.innerHTML = '';
-    
-    // 取出所有玩家並依照分數排序
-    Object.entries(players||{}).filter(([id, p]) => !p.isHost).sort((a,b) => b[1].score - a[1].score).forEach(([id, p]) => {
+    Object.values(players||{}).filter(p => !p.isHost).sort((a,b) => b.score - a.score).forEach(p => {
         let cards = (p.penaltyCooldown > 0) ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
-        let isMe = id === localState.playerId;
-        let highlightClass = isMe ? 'highlight-player' : '';
-        let meBadge = isMe ? '<span class="text-xs bg-yellow-400 text-black px-1 ml-2 rounded font-bold">YOU</span>' : '';
-        
         DOMElements.hostPlayerScores.innerHTML += `
-            <div class="flex justify-between items-center bg-slate-800 p-3 rounded-md mb-2 border border-slate-700 ${highlightClass}">
-                <span class="font-bold text-lg">${p.name} ${meBadge}</span>
-                <div class="flex items-center gap-2">
-                    <span class="text-xl drop-shadow-md">${cards}</span>
-                    <span class="font-orbitron text-2xl text-yellow-400 font-bold">${p.score}</span>
-                </div>
+            <div class="flex justify-between items-center bg-slate-800 p-3 rounded-md mb-2 border border-slate-700">
+                <span class="font-bold text-lg">${p.name}</span>
+                <div class="flex items-center gap-2"><span class="text-xl drop-shadow-md">${cards}</span><span class="font-orbitron text-2xl text-yellow-400 font-bold">${p.score}</span></div>
             </div>`;
     });
 }
@@ -765,16 +769,16 @@ async function handleAnswerSubmitted(roomData) {
     DOMElements.btnSubmitAnswer.disabled = true;
     DOMElements.btnSubmitAnswer.classList.remove('pulse');
     const q = roomData.current_question, sub = roomData.players[q.submitted_by];
-
+    
     if (localState.role === 'host' && typeof q.is_correct === 'undefined') {
         const isCorrect = parseInt(q.submitted_answer) === q.correctAnswer;
         const diffPts = roomData.settings.difficulty === 'L1' ? 1 : 2;
         const newScore = sub.score + (isCorrect ? diffPts : -diffPts);
-
+        
         // 累計答錯次數
         const newWrong = isCorrect ? 0 : (sub.wrongCount || 0) + 1;
         const shouldSuspend = newWrong >= 2;
-
+        
         let up = {};
         up[`/current_question/is_correct`] = isCorrect;
         up[`/players/${q.submitted_by}/score`] = newScore;
@@ -783,10 +787,9 @@ async function handleAnswerSubmitted(roomData) {
         if (shouldSuspend) {
             up[`/players/${q.submitted_by}/penaltyCooldown`] = 2;
         }
-
         if (roomData.settings.mode === 'time') {
-            up[`/timerState/paused`] = true; 
-            up[`/timerState/lastTimeLeft`] = localState.lastTimeLeft; 
+            up[`/timerState/paused`] = true;
+            up[`/timerState/lastTimeLeft`] = localState.lastTimeLeft;
             up[`/timerState/pauseStartTime`] = serverTimestamp();
         }
         await update(ref(db, `rooms/${localState.roomName}`), up);
@@ -799,9 +802,8 @@ async function handleAnswerSubmitted(roomData) {
             DOMElements.resultSteps.innerHTML = q.steps;
             DOMElements.btnNextQuestion.style.display = localState.role === 'host' ? 'inline-block' : 'none';
             const stamp = DOMElements.resultStamp;
-            
             if (!stamp.classList.contains('show')) {
-                // 這裡的音效觸發將使得包含答錯的學生在內，所有人都能聽到提示音
+                // 更顯著地播放音效，針對答對與答錯情境區分
                 playSfx(q.is_correct ? 'correct' : 'wrong');
                 stamp.textContent = q.is_correct ? 'CORRECT' : 'WRONG';
                 stamp.className = `stamp ${q.is_correct ? 'stamp-correct' : 'stamp-wrong'}`;
@@ -818,15 +820,15 @@ function resetForNewQuestion(roomData) {
         const myData = roomData.players[localState.playerId];
         if(myData) {
             DOMElements.playerInGameName.textContent = myData.name;
-
+            
             // 判斷是否正處於紅牌暫停期間
             const isSuspended = (myData.penaltyCooldown || 0) > 0;
-
+            
             // 若為 1 則亮出黃牌 (且沒有被暫停)
             DOMElements.yellowCard.style.display = (myData.wrongCount === 1 && !isSuspended) ? 'flex' : 'none';
             // 顯示覆蓋數字鍵盤的紅牌
             DOMElements.redCardOverlay.style.display = isSuspended ? 'flex' : 'none';
-
+            
             // 停用提交按鈕以防亂答
             DOMElements.btnSubmitAnswer.disabled = isSuspended;
             if(!isSuspended) {
@@ -846,14 +848,14 @@ async function handleNextQuestion() {
     const roomRef = ref(db, `rooms/${localState.roomName}`);
     const roomData = (await get(roomRef)).val();
     let up = {};
-
+    
     // 扣除所有人的紅牌冷卻回合數 (2 -> 1 代表這回合開始被鎖；1 -> 0 代表下回合解鎖)
-    Object.keys(roomData.players||{}).forEach(id => { 
+    Object.keys(roomData.players||{}).forEach(id => {
         if (roomData.players[id].penaltyCooldown > 0) {
             up[`/players/${id}/penaltyCooldown`] = roomData.players[id].penaltyCooldown - 1;
         }
     });
-
+    
     if(roomData.settings.mode === 'time' && roomData.timerState.paused) {
         up["/timerState/paused"] = false; up["/timerState/pauseStartTime"] = null;
         up["/timerState/totalPauseDuration"] = (roomData.timerState.totalPauseDuration||0) + (Date.now() - roomData.timerState.pauseStartTime);
@@ -863,16 +865,16 @@ async function handleNextQuestion() {
 }
 
 function showWinner(roomData) {
+    // 同時疊加撥放勝利與歡呼音效
     playSfx('win');
-    // 延遲一點播放歡呼聲，製造疊加氣氛
-    setTimeout(() => playSfx('cheer'), 400); 
+    playSfx('cheer');
     
     DOMElements.winnerModal.style.display = 'flex';
     DOMElements.finalScores.innerHTML = '';
     const sorted = Object.values(roomData.players).filter(p => !p.isHost).sort((a,b) => b.score - a.score);
     const ranks = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍'];
     const colors = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
-
+    
     sorted.slice(0, 3).forEach((p, index) => {
         DOMElements.finalScores.innerHTML += `
             <div class="flex justify-between items-center bg-black/40 p-4 rounded-xl mb-3 w-[350px]">
@@ -919,7 +921,6 @@ function init() {
     updateHostModeOptions({ target: DOMElements.hostGameMode });
     navigateTo('view-role-selection');
 }
-
 init();
 </script>
 </body>
