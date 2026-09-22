@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 /***** Custom Styles & Animations *****/
-/* 新增：整體縮小設定，讓所有 rem 單位 (Tailwind 預設) 縮小 10% */
+/* 整體縮小設定，讓所有 rem 單位縮小 10% */
 html {
     font-size: 90%;
 }
@@ -156,7 +156,6 @@ body {
 }
 </style>
 </head>
-<!-- 新增 p-4 md:p-8，預留少許空間給設備邊界位置 -->
 <body class="w-screen h-screen flex items-center justify-center p-4 md:p-8 box-border">
 <div id="app-container" class="w-full h-full max-w-5xl mx-auto flex flex-col items-center justify-center relative">
 
@@ -257,7 +256,6 @@ body {
                 <p class="text-slate-400 text-sm mb-1">遊戲難度</p>
                 <p id="rule-diff-display" class="text-lg md:text-xl font-bold text-white"></p>
             </div>
-            <!-- 新增：計分方法與黃紅牌機制 -->
             <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-slate-400 text-sm mb-1">計分方法 (Scoring)</p>
@@ -305,7 +303,6 @@ body {
         <!-- Center Panel: Question & Numpad -->
         <div id="game-center-panel" class="flex-grow flex flex-col items-center justify-center bg-slate-900/50 rounded-lg p-4 md:p-6 relative">
             <div id="question-container" class="mb-4 md:mb-6 text-center w-full px-2">
-                <!-- 修改：適度調降文字尺寸並加入 break-words 防止超長題目突出去 -->
                 <p id="question-text" class="text-4xl md:text-6xl lg:text-7xl font-bold font-orbitron tracking-wider text-white break-words"></p>
             </div>
             <!-- Player Numpad View -->
@@ -348,7 +345,7 @@ body {
             </div>
         </div>
     </div>
-    <!-- Result Modal (改為 fixed 確保遮罩全螢幕不受 Padding 影響) -->
+    <!-- Result Modal (fixed) -->
     <div id="result-modal" style="display: none;" class="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-40 p-4 backdrop-blur-sm">
         <div id="result-stamp" class="stamp"></div>
         <div class="text-center bg-slate-900 border border-slate-700 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-2xl">
@@ -364,7 +361,7 @@ body {
             <button id="btn-next-question" class="btn-slate text-xl md:text-2xl font-bold py-3 px-8 md:py-4 md:px-12 rounded-lg mt-6 md:mt-8 shadow-lg hover:text-yellow-400 transition-colors" style="display: none;">下一題 <i class="fas fa-arrow-right ml-2"></i></button>
         </div>
     </div>
-    <!-- Winner Modal (改為 fixed 確保遮罩全螢幕) -->
+    <!-- Winner Modal (fixed) -->
     <div id="winner-modal" style="display: none;" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50 py-10 px-4">
         <i class="fas fa-trophy text-5xl md:text-8xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" style="animation: crown-bounce 1s ease-in-out infinite;"></i>
         <p class="text-4xl md:text-6xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-6 tracking-widest text-center">GAME OVER</p>
@@ -747,20 +744,18 @@ function hostGenerateNewQuestion(settings) {
 function updatePlayerScores(players) {
     if (!DOMElements.hostPlayerScores) return;
     DOMElements.hostPlayerScores.innerHTML = '';
-    
-    // 將 ID 包含進物件中以便識別自己，再作排序
+
     Object.entries(players||{}).filter(([id, p]) => !p.isHost)
         .map(([id, p]) => ({ id, ...p }))
         .sort((a,b) => b.score - a.score)
         .forEach(p => {
             let cards = (p.penaltyCooldown > 0) ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
             let isMe = (p.id === localState.playerId);
-            
-            // 如果是自己，增加黃色高亮背景、邊框與特殊文字顏色
+
             let bgClass = isMe ? 'bg-slate-700/80 border-yellow-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : 'bg-slate-800 border-slate-700';
             let nameColor = isMe ? 'text-yellow-300' : 'text-white';
             let tagText = isMe ? '<span class="text-xs bg-yellow-500/20 text-yellow-300 px-1 py-0.5 rounded ml-1">你</span>' : '';
-            
+
             DOMElements.hostPlayerScores.innerHTML += `
                 <div class="flex justify-between items-center ${bgClass} p-2 md:p-3 rounded-md mb-2 border">
                     <span class="font-bold text-sm md:text-lg ${nameColor}">${p.name} ${tagText}</span>
@@ -793,8 +788,23 @@ function updateTimer(roomData) {
 async function handleAnswerSubmitted(roomData) {
     DOMElements.btnSubmitAnswer.disabled = true;
     DOMElements.btnSubmitAnswer.classList.remove('pulse');
-    const q = roomData.current_question, sub = roomData.players[q.submitted_by];
+    const q = roomData.current_question;
+    
+    // 防呆檢查：確認提交的玩家是否還在遊戲房間內
+    const sub = (roomData.players && roomData.players[q.submitted_by]) ? roomData.players[q.submitted_by] : null;
+
     if (localState.role === 'host' && typeof q.is_correct === 'undefined') {
+        
+        // 【核心修復點】：如果提交答案的玩家已經離線或資料被移除，主機將直接重置該題
+        // 讓該「幽靈提交」作廢，房間內其他玩家的按鈕就能立刻恢復運作，不會卡死
+        if (!sub) {
+            await update(ref(db, `rooms/${localState.roomName}/current_question`), {
+                submitted_by: null,
+                submitted_answer: null
+            });
+            return;
+        }
+
         const isCorrect = parseInt(q.submitted_answer) === q.correctAnswer;
         const diffPts = roomData.settings.difficulty === 'L1' ? 1 : 2;
         const newScore = sub.score + (isCorrect ? diffPts : -diffPts);
@@ -816,7 +826,8 @@ async function handleAnswerSubmitted(roomData) {
     } else if (typeof q.is_correct !== 'undefined') {
         if (DOMElements.resultModal.style.display === 'none') {
             DOMElements.resultModal.style.display = 'flex';
-            DOMElements.resultSubmitter.textContent = sub.name;
+            // 安全顯示提交者名字，若玩家已斷線顯示預設文字
+            DOMElements.resultSubmitter.textContent = sub ? sub.name : "已離線玩家";
             DOMElements.resultSubmittedAnswer.textContent = q.submitted_answer;
             DOMElements.resultCorrectAnswer.textContent = q.correctAnswer;
             DOMElements.resultSteps.innerHTML = q.steps;
@@ -836,8 +847,10 @@ function resetForNewQuestion(roomData) {
     DOMElements.resultModal.style.display = 'none';
     DOMElements.resultStamp.classList.remove('show');
     if (localState.role === 'player') {
-        const myData = roomData.players[localState.playerId];
-        if(myData) {
+        // 確認玩家自己的連線資料是否還在 Firebase 中
+        const myData = (roomData.players && roomData.players[localState.playerId]) ? roomData.players[localState.playerId] : null;
+        
+        if (myData) {
             DOMElements.playerInGameName.textContent = myData.name;
             const isSuspended = (myData.penaltyCooldown || 0) > 0;
             DOMElements.yellowCard.style.display = (myData.wrongCount === 1 && !isSuspended) ? 'flex' : 'none';
@@ -848,6 +861,13 @@ function resetForNewQuestion(roomData) {
             } else {
                 DOMElements.btnSubmitAnswer.classList.remove('pulse');
             }
+        } else {
+            // 如果玩家端發現自己被踢出房間 (斷線)，將永久鎖定他的作答權限
+            DOMElements.playerInGameName.textContent = localState.playerName + " (連線已中斷)";
+            DOMElements.btnSubmitAnswer.disabled = true;
+            DOMElements.btnSubmitAnswer.classList.remove('pulse');
+            DOMElements.yellowCard.style.display = 'none';
+            DOMElements.redCardOverlay.style.display = 'none';
         }
         DOMElements.playerAnswerDisplay.textContent = '';
     } else {
@@ -878,23 +898,22 @@ function showWinner(roomData) {
     playSfx('cheer');
     DOMElements.winnerModal.style.display = 'flex';
     DOMElements.finalScores.innerHTML = '';
-    
+
     const sorted = Object.values(roomData.players).filter(p => !p.isHost).sort((a,b) => b.score - a.score);
-    
-    // 使用 Dense Ranking 處理同分狀況 (1, 2, 3...)
+
     let currentRank = 0;
     let lastScore = null;
-    
+
     sorted.forEach((p, index) => {
         if (p.score !== lastScore) {
             currentRank++;
             lastScore = p.score;
         }
-        
+
         let rankLabel = currentRank === 1 ? '🥇 冠軍' : (currentRank === 2 ? '🥈 亞軍' : (currentRank === 3 ? '🥉 季軍' : `第 ${currentRank} 名`));
         let colorClass = currentRank === 1 ? 'text-yellow-400' : (currentRank === 2 ? 'text-gray-300' : (currentRank === 3 ? 'text-amber-600' : 'text-slate-400'));
         let marginClass = currentRank <= 3 ? 'ml-6 md:ml-8' : 'ml-0 mt-1';
-        
+
         DOMElements.finalScores.innerHTML += `
             <div class="flex justify-between items-center bg-black/40 p-3 md:p-4 rounded-xl mb-3 w-[100%]">
                 <div class="text-xl md:text-2xl font-bold ${colorClass}">${rankLabel}<br><span class="text-white text-md md:text-lg ${marginClass}">${p.name}</span></div>
