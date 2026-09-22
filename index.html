@@ -14,6 +14,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 /***** Custom Styles & Animations *****/
+/* 新增：整體縮小設定，讓所有 rem 單位 (Tailwind 預設) 縮小 10% */
+html {
+    font-size: 90%;
+}
+@media (max-width: 1024px) {
+    html {
+        font-size: 85%; /* 在平板與小螢幕再略微縮小，確保不出界 */
+    }
+}
+
 body {
     font-family: 'Noto Sans TC', sans-serif;
     background: radial-gradient(circle, #1a2a45, #111827, #000000);
@@ -146,22 +156,23 @@ body {
 }
 </style>
 </head>
-<body class="w-screen h-screen flex items-center justify-center">
-<div id="app-container" class="w-full h-full max-w-4xl mx-auto p-4 flex flex-col items-center justify-center">
+<!-- 新增 p-4 md:p-8，預留少許空間給設備邊界位置 -->
+<body class="w-screen h-screen flex items-center justify-center p-4 md:p-8 box-border">
+<div id="app-container" class="w-full h-full max-w-5xl mx-auto flex flex-col items-center justify-center relative">
 
 <!-- 1. ROLE SELECTION VIEW -->
 <div id="view-role-selection" class="view active w-full text-center">
-    <h1 class="text-5xl md:text-6xl font-bold font-orbitron text-yellow-400 mb-2 tracking-widest text-shadow">有向數大師挑戰賽</h1>
-    <p class="text-slate-300 mb-12 text-lg">Directed Numbers Master Championship</p>
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold font-orbitron text-yellow-400 mb-2 tracking-widest text-shadow">有向數大師挑戰賽</h1>
+    <p class="text-slate-300 mb-12 text-md md:text-lg">Directed Numbers Master Championship</p>
     <div class="flex gap-4 md:gap-8 justify-center">
-        <button id="btn-select-host" class="btn-gold text-xl md:text-2xl font-bold py-4 px-8 md:py-6 md:px-12 rounded-lg shadow-lg pulse">我是主持 (Host)</button>
-        <button id="btn-select-player" class="btn-slate text-xl md:text-2xl font-bold py-4 px-8 md:py-6 md:px-12 rounded-lg shadow-lg">我是玩家 (Player)</button>
+        <button id="btn-select-host" class="btn-gold text-lg md:text-2xl font-bold py-4 px-6 md:py-6 md:px-12 rounded-lg shadow-lg pulse">我是主持 (Host)</button>
+        <button id="btn-select-player" class="btn-slate text-lg md:text-2xl font-bold py-4 px-6 md:py-6 md:px-12 rounded-lg shadow-lg">我是玩家 (Player)</button>
     </div>
 </div>
 
 <!-- 2A. HOST SETUP VIEW -->
 <div id="view-host-setup" class="view w-full max-w-md">
-    <h2 class="text-4xl font-bold font-orbitron text-yellow-400 mb-6 text-center">建立遊戲房間</h2>
+    <h2 class="text-3xl md:text-4xl font-bold font-orbitron text-yellow-400 mb-6 text-center">建立遊戲房間</h2>
     <div class="space-y-4 bg-slate-800/50 p-6 rounded-lg">
         <div>
             <label class="block mb-2 text-md text-slate-300">房間名稱 (Room Name)</label>
@@ -208,7 +219,7 @@ body {
 
 <!-- 2B. PLAYER JOIN VIEW -->
 <div id="view-player-join" class="view w-full max-w-md">
-    <h2 class="text-4xl font-bold font-orbitron text-yellow-400 mb-6 text-center">加入遊戲房間</h2>
+    <h2 class="text-3xl md:text-4xl font-bold font-orbitron text-yellow-400 mb-6 text-center">加入遊戲房間</h2>
     <div class="space-y-4 bg-slate-800/50 p-6 rounded-lg">
         <div>
             <label class="block mb-2 text-md text-slate-300">房間名稱 (Room Name)</label>
@@ -231,30 +242,30 @@ body {
 <!-- 3. LOBBY VIEW -->
 <div id="view-lobby" class="view w-full max-w-4xl">
     <div class="text-center mb-6">
-        <h2 class="text-4xl font-bold font-orbitron text-yellow-400">遊戲大廳</h2>
-        <p class="text-2xl text-slate-300">房間: <span id="lobby-room-name" class="font-bold"></span></p>
+        <h2 class="text-3xl md:text-4xl font-bold font-orbitron text-yellow-400">遊戲大廳</h2>
+        <p class="text-xl md:text-2xl text-slate-300">房間: <span id="lobby-room-name" class="font-bold"></span></p>
     </div>
     <!-- 動態比賽規則面板 -->
     <div id="lobby-game-rules" class="hidden mx-auto max-w-2xl bg-slate-900/80 border-2 border-slate-600 shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-xl p-6 mb-8">
-        <h3 class="text-2xl font-bold font-orbitron text-yellow-400 mb-4 border-b border-slate-700 pb-2"><i class="fas fa-clipboard-list mr-2"></i> 比賽規則 (Game Rules)</h3>
+        <h3 class="text-xl md:text-2xl font-bold font-orbitron text-yellow-400 mb-4 border-b border-slate-700 pb-2"><i class="fas fa-clipboard-list mr-2"></i> 比賽規則 (Game Rules)</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
             <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
                 <p class="text-slate-400 text-sm mb-1">比賽模式</p>
-                <p id="rule-mode-display" class="text-xl font-bold text-white"></p>
+                <p id="rule-mode-display" class="text-lg md:text-xl font-bold text-white"></p>
             </div>
             <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
                 <p class="text-slate-400 text-sm mb-1">遊戲難度</p>
-                <p id="rule-diff-display" class="text-xl font-bold text-white"></p>
+                <p id="rule-diff-display" class="text-lg md:text-xl font-bold text-white"></p>
             </div>
             <!-- 新增：計分方法與黃紅牌機制 -->
             <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-slate-400 text-sm mb-1">計分方法 (Scoring)</p>
-                    <p id="rule-score-display" class="text-md text-slate-200 mt-1"></p>
+                    <p id="rule-score-display" class="text-sm md:text-md text-slate-200 mt-1"></p>
                 </div>
                 <div>
                     <p class="text-slate-400 text-sm mb-1">黃紅牌機制</p>
-                    <p class="text-md text-slate-200">
+                    <p class="text-sm md:text-md text-slate-200">
                         答錯 <span class="font-bold text-yellow-400">1</span> 次獲 <span class="font-bold text-yellow-400 bg-black/50 px-2 py-1 rounded">🟨 黃牌警告</span><br>
                         連續答錯 <span class="font-bold text-red-400">2</span> 次獲 <span class="font-bold text-red-500 bg-black/50 px-2 py-1 rounded">🟥 紅牌 (暫停一回合)</span>
                     </p>
@@ -264,11 +275,11 @@ body {
     </div>
     <div id="lobby-player-list" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"></div>
     <div id="lobby-player-controls" class="text-center">
-        <button id="btn-player-ready" class="btn-gold text-2xl font-bold py-4 px-10 rounded-lg">準備 (Ready)</button>
+        <button id="btn-player-ready" class="btn-gold text-xl md:text-2xl font-bold py-4 px-10 rounded-lg">準備 (Ready)</button>
     </div>
     <div id="lobby-host-controls" class="text-center" style="display: none;">
         <p class="text-slate-400 mb-4">等待所有玩家準備...</p>
-        <button id="btn-host-start" class="btn-gold text-2xl font-bold py-4 px-10 rounded-lg pulse" disabled>開始遊戲 (Start Game)</button>
+        <button id="btn-host-start" class="btn-gold text-xl md:text-2xl font-bold py-4 px-10 rounded-lg pulse" disabled>開始遊戲 (Start Game)</button>
     </div>
 </div>
 
@@ -285,81 +296,82 @@ body {
         </div>
     </div>
     <!-- Main Game Area -->
-    <div class="flex-grow flex flex-col md:flex-row gap-4 mt-4 min-h-0">
+    <div class="flex-grow flex flex-col md:flex-row gap-4 md:gap-6 mt-4 min-h-0">
         <!-- Player Scores (Visible to all) -->
-        <div id="host-game-view" class="w-full md:w-1/4 bg-slate-900/50 p-2 md:p-4 rounded-lg hidden overflow-y-auto">
-            <h3 class="text-xl md:text-2xl font-bold text-yellow-400 mb-4 text-center">玩家分數</h3>
+        <div id="host-game-view" class="w-full md:w-1/4 lg:w-1/5 bg-slate-900/50 p-2 md:p-4 rounded-lg hidden overflow-y-auto">
+            <h3 class="text-xl font-bold text-yellow-400 mb-4 text-center">玩家分數</h3>
             <div id="host-player-scores" class="space-y-2"></div>
         </div>
         <!-- Center Panel: Question & Numpad -->
         <div id="game-center-panel" class="flex-grow flex flex-col items-center justify-center bg-slate-900/50 rounded-lg p-4 md:p-6 relative">
-            <div id="question-container" class="mb-6 text-center">
-                <p id="question-text" class="text-5xl md:text-7xl font-bold font-orbitron tracking-wider text-white"></p>
+            <div id="question-container" class="mb-4 md:mb-6 text-center w-full px-2">
+                <!-- 修改：適度調降文字尺寸並加入 break-words 防止超長題目突出去 -->
+                <p id="question-text" class="text-4xl md:text-6xl lg:text-7xl font-bold font-orbitron tracking-wider text-white break-words"></p>
             </div>
             <!-- Player Numpad View -->
-            <div id="player-game-view" class="w-full max-w-xs md:max-w-sm hidden relative mt-4">
+            <div id="player-game-view" class="w-full max-w-[18rem] md:max-w-xs lg:max-w-sm hidden relative mt-2 md:mt-4">
                 <!-- Player Name Display -->
                 <div class="text-center mb-2">
-                    <span id="player-ingame-name" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-widest uppercase bg-black/50 px-4 py-1 rounded-full shadow-lg border border-yellow-500/50"></span>
+                    <span id="player-ingame-name" class="text-xl md:text-2xl font-black text-yellow-300 tracking-widest uppercase bg-black/50 px-4 py-1 rounded-full shadow-lg border border-yellow-500/50"></span>
                 </div>
                 <!-- Yellow Card Icon -->
                 <div id="yellow-card" class="yellow-card">警告</div>
-                <div id="player-answer-display" class="w-full h-16 md:h-20 bg-slate-800 rounded-t-lg border-2 border-b-0 border-slate-500 text-white text-4xl md:text-5xl text-right p-3 font-orbitron shadow-inner"></div>
-                <div class="grid grid-cols-4 gap-2 bg-slate-800 p-2 border-2 border-t-0 border-slate-500 rounded-b-lg shadow-lg relative">
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="7">7</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="8">8</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="9">9</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold text-yellow-400" data-key="+">＋</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="4">4</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="5">5</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="6">6</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold text-yellow-400" data-key="-">－</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="1">1</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="2">2</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="3">3</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold text-red-400" data-key="C">C</button>
-                    <button class="numpad-btn text-2xl p-4 font-bold col-span-4" data-key="0">0</button>
+                <div id="player-answer-display" class="w-full h-14 md:h-16 lg:h-20 bg-slate-800 rounded-t-lg border-2 border-b-0 border-slate-500 text-white text-3xl md:text-4xl lg:text-5xl text-right p-2 md:p-3 font-orbitron shadow-inner flex items-center justify-end overflow-hidden"></div>
+                <div class="grid grid-cols-4 gap-1 md:gap-2 bg-slate-800 p-2 border-2 border-t-0 border-slate-500 rounded-b-lg shadow-lg relative">
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="7">7</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="8">8</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="9">9</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold text-yellow-400" data-key="+">＋</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="4">4</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="5">5</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="6">6</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold text-yellow-400" data-key="-">－</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="1">1</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="2">2</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold" data-key="3">3</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold text-red-400" data-key="C">C</button>
+                    <button class="numpad-btn text-xl md:text-2xl p-3 md:p-4 font-bold col-span-4" data-key="0">0</button>
                     <!-- Red Card Penalty Overlay (Blocks Keypad Input) -->
                     <div id="red-card-overlay" class="red-card-overlay">
-                        <div class="red-card mb-4">
-                            <i class="fas fa-hand-paper text-4xl text-white mb-2"></i>
-                            <span class="text-white text-3xl font-black">OUT</span>
+                        <div class="red-card mb-2 md:mb-4">
+                            <i class="fas fa-hand-paper text-3xl md:text-4xl text-white mb-2"></i>
+                            <span class="text-white text-2xl md:text-3xl font-black">OUT</span>
                         </div>
-                        <p class="text-2xl font-bold text-white text-center shadow-black drop-shadow-md">連續答錯兩題<br><span class="text-yellow-400">暫停一回合</span></p>
+                        <p class="text-lg md:text-2xl font-bold text-white text-center shadow-black drop-shadow-md">連續答錯兩題<br><span class="text-yellow-400">暫停一回合</span></p>
                     </div>
                 </div>
-                <button id="btn-submit-answer" class="btn-gold w-full text-2xl font-black py-4 mt-4 rounded-lg pulse tracking-widest shadow-xl">提交答案</button>
+                <button id="btn-submit-answer" class="btn-gold w-full text-xl md:text-2xl font-black py-3 md:py-4 mt-4 rounded-lg pulse tracking-widest shadow-xl">提交答案</button>
             </div>
             <!-- Host Status View -->
             <div id="host-control-view" class="text-center hidden w-full">
-                <p id="host-status-text" class="text-2xl md:text-3xl font-bold text-slate-300 mb-4 animate-pulse">等待玩家搶答...</p>
+                <p id="host-status-text" class="text-xl md:text-3xl font-bold text-slate-300 mb-4 animate-pulse">等待玩家搶答...</p>
             </div>
         </div>
     </div>
-    <!-- Result Modal -->
-    <div id="result-modal" style="display: none;" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-40 p-4 backdrop-blur-sm">
+    <!-- Result Modal (改為 fixed 確保遮罩全螢幕不受 Padding 影響) -->
+    <div id="result-modal" style="display: none;" class="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-40 p-4 backdrop-blur-sm">
         <div id="result-stamp" class="stamp"></div>
-        <div class="text-center bg-slate-900 border border-slate-700 p-8 rounded-2xl shadow-2xl w-full max-w-3xl">
-            <p class="mb-2 text-slate-400 text-lg">搶答玩家: <span id="result-submitter" class="font-bold text-yellow-400 text-2xl"></span></p>
-            <p class="mb-4 text-3xl md:text-4xl">提交答案: <span id="result-submitted-answer" class="font-orbitron font-bold"></span></p>
-            <hr class="border-slate-700 my-6">
-            <p class="mb-2 text-2xl text-green-400 font-bold">正確答案</p>
-            <p id="result-correct-answer" class="text-5xl md:text-6xl font-orbitron font-black text-green-300 mb-8 tracking-wider"></p>
-            <div class="bg-slate-800 p-6 rounded-lg text-left inline-block w-full">
-                <p class="mb-3 text-xl text-yellow-400 font-bold border-b border-slate-600 pb-2"><i class="fas fa-list-ol mr-2"></i>解題步驟</p>
-                <div id="result-steps" class="text-xl md:text-2xl font-mono text-slate-200 leading-relaxed space-y-2"></div>
+        <div class="text-center bg-slate-900 border border-slate-700 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-2xl">
+            <p class="mb-2 text-slate-400 text-md md:text-lg">搶答玩家: <span id="result-submitter" class="font-bold text-yellow-400 text-xl md:text-2xl"></span></p>
+            <p class="mb-4 text-2xl md:text-4xl">提交答案: <span id="result-submitted-answer" class="font-orbitron font-bold"></span></p>
+            <hr class="border-slate-700 my-4 md:my-6">
+            <p class="mb-2 text-xl md:text-2xl text-green-400 font-bold">正確答案</p>
+            <p id="result-correct-answer" class="text-4xl md:text-6xl font-orbitron font-black text-green-300 mb-6 md:mb-8 tracking-wider"></p>
+            <div class="bg-slate-800 p-4 md:p-6 rounded-lg text-left inline-block w-full">
+                <p class="mb-3 text-lg md:text-xl text-yellow-400 font-bold border-b border-slate-600 pb-2"><i class="fas fa-list-ol mr-2"></i>解題步驟</p>
+                <div id="result-steps" class="text-lg md:text-2xl font-mono text-slate-200 leading-relaxed space-y-2"></div>
             </div>
-            <button id="btn-next-question" class="btn-slate text-2xl font-bold py-4 px-12 rounded-lg mt-8 shadow-lg hover:text-yellow-400 transition-colors" style="display: none;">下一題 <i class="fas fa-arrow-right ml-2"></i></button>
+            <button id="btn-next-question" class="btn-slate text-xl md:text-2xl font-bold py-3 px-8 md:py-4 md:px-12 rounded-lg mt-6 md:mt-8 shadow-lg hover:text-yellow-400 transition-colors" style="display: none;">下一題 <i class="fas fa-arrow-right ml-2"></i></button>
         </div>
     </div>
-    <!-- Winner Modal (Full Leaderboard) -->
-    <div id="winner-modal" style="display: none;" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 py-10">
-        <i class="fas fa-trophy text-6xl md:text-8xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" style="animation: crown-bounce 1s ease-in-out infinite;"></i>
-        <p class="text-5xl md:text-6xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-6 tracking-widest text-center">GAME OVER</p>
+    <!-- Winner Modal (改為 fixed 確保遮罩全螢幕) -->
+    <div id="winner-modal" style="display: none;" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50 py-10 px-4">
+        <i class="fas fa-trophy text-5xl md:text-8xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" style="animation: crown-bounce 1s ease-in-out infinite;"></i>
+        <p class="text-4xl md:text-6xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-6 tracking-widest text-center">GAME OVER</p>
         <div id="final-scores" class="bg-slate-900 border border-yellow-600/30 p-4 md:p-8 rounded-2xl shadow-[0_0_30px_rgba(251,191,36,0.15)] w-full max-w-[400px] custom-scrollbar overflow-y-auto max-h-[50vh]">
             <!-- All scores injected here -->
         </div>
-        <button onclick="window.location.reload()" class="mt-8 btn-slate py-3 px-8 text-xl rounded-lg font-bold hover:text-white">離開房間</button>
+        <button onclick="window.location.reload()" class="mt-6 md:mt-8 btn-slate py-3 px-8 text-lg md:text-xl rounded-lg font-bold hover:text-white">離開房間</button>
     </div>
 </div>
 </div>
@@ -660,8 +672,8 @@ function updateLobbyPlayerList(players) {
     DOMElements.lobbyPlayerList.innerHTML = '';
     Object.values(players || {}).filter(p => !p.isHost).forEach(p => {
         const card = document.createElement('div');
-        card.className = `p-3 rounded-lg text-center shadow-lg ${p.isReady ? 'bg-green-800/80 border-2 border-green-400' : 'bg-slate-700/80'}`;
-        card.innerHTML = `<p class="text-lg font-bold truncate">${p.name}</p><p class="text-sm font-bold ${p.isReady ? 'text-green-300' : 'text-slate-400'}">${p.isReady ? '已準備' : '等待中...'}</p>`;
+        card.className = `p-2 md:p-3 rounded-lg text-center shadow-lg ${p.isReady ? 'bg-green-800/80 border-2 border-green-400' : 'bg-slate-700/80'}`;
+        card.innerHTML = `<p class="text-md md:text-lg font-bold truncate">${p.name}</p><p class="text-xs md:text-sm font-bold ${p.isReady ? 'text-green-300' : 'text-slate-400'}">${p.isReady ? '已準備' : '等待中...'}</p>`;
         DOMElements.lobbyPlayerList.appendChild(card);
     });
 }
@@ -712,13 +724,12 @@ function startGame(initialRoomData) {
 function setupGameUI(settings) {
     DOMElements.gameHeader.classList.remove('hidden');
     const isHost = localState.role === 'host';
-    
-    // 修改此處：讓「玩家分數」的視圖對所有人皆為可見
+
     DOMElements.hostGameView.classList.remove('hidden');
     DOMElements.hostGameView.style.display = 'block'; 
     DOMElements.hostControlView.style.display = isHost ? 'block' : 'none';
     DOMElements.playerGameView.style.display = isHost ? 'none' : 'block';
-    
+
     if (settings.mode === 'score') {
         DOMElements.gameTimer.style.display = 'none';
         DOMElements.gameScoreTarget.style.display = 'block';
@@ -734,15 +745,14 @@ function hostGenerateNewQuestion(settings) {
 }
 
 function updatePlayerScores(players) {
-    // 修改此處：移除身分判斷，讓所有人都能更新分數板
     if (!DOMElements.hostPlayerScores) return;
     DOMElements.hostPlayerScores.innerHTML = '';
     Object.values(players||{}).filter(p => !p.isHost).sort((a,b) => b.score - a.score).forEach(p => {
         let cards = (p.penaltyCooldown > 0) ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
         DOMElements.hostPlayerScores.innerHTML += `
-            <div class="flex justify-between items-center bg-slate-800 p-3 rounded-md mb-2 border border-slate-700">
-                <span class="font-bold text-lg">${p.name}</span>
-                <div class="flex items-center gap-2"><span class="text-xl drop-shadow-md">${cards}</span><span class="font-bold font-orbitron text-2xl text-yellow-400">${p.score}</span></div>
+            <div class="flex justify-between items-center bg-slate-800 p-2 md:p-3 rounded-md mb-2 border border-slate-700">
+                <span class="font-bold text-sm md:text-lg">${p.name}</span>
+                <div class="flex items-center gap-1 md:gap-2"><span class="text-md md:text-xl drop-shadow-md">${cards}</span><span class="font-bold font-orbitron text-lg md:text-2xl text-yellow-400">${p.score}</span></div>
             </div>`;
     });
 }
@@ -862,11 +872,11 @@ function showWinner(roomData) {
     sorted.forEach((p, index) => {
         let rankLabel = index < 3 ? ranks[index] : `第 ${index + 1} 名`;
         let colorClass = index < 3 ? colors[index] : 'text-slate-400';
-        let marginClass = index < 3 ? 'ml-8' : 'ml-0 mt-1';
+        let marginClass = index < 3 ? 'ml-6 md:ml-8' : 'ml-0 mt-1';
         DOMElements.finalScores.innerHTML += `
-            <div class="flex justify-between items-center bg-black/40 p-4 rounded-xl mb-3 w-[100%]">
-                <div class="text-2xl font-bold ${colorClass}">${rankLabel}<br><span class="text-white text-lg ${marginClass}">${p.name}</span></div>
-                <div class="text-3xl md:text-4xl font-bold font-orbitron text-yellow-300">${p.score}<span class="text-sm ml-1">pts</span></div>
+            <div class="flex justify-between items-center bg-black/40 p-3 md:p-4 rounded-xl mb-3 w-[100%]">
+                <div class="text-xl md:text-2xl font-bold ${colorClass}">${rankLabel}<br><span class="text-white text-md md:text-lg ${marginClass}">${p.name}</span></div>
+                <div class="text-2xl md:text-4xl font-bold font-orbitron text-yellow-300">${p.score}<span class="text-xs md:text-sm ml-1">pts</span></div>
             </div>`;
     });
 }
