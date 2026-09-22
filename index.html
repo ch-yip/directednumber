@@ -89,7 +89,6 @@ body {
 .numpad-btn:hover { background: #64748b; color: #fff; }
 .numpad-btn:active { transform: scale(0.95); }
 .error-message { color: #ef4444; font-weight: bold; display: none; margin-top: 0.5rem; }
-
 /* Yellow / Red Cards CSS */
 .yellow-card {
     position: absolute;
@@ -134,6 +133,7 @@ body {
 </head>
 <body class="w-screen h-screen flex items-center justify-center">
 <div id="app-container" class="w-full h-full max-w-4xl mx-auto p-4 flex flex-col items-center justify-center">
+
 <!-- 1. ROLE SELECTION VIEW -->
 <div id="view-role-selection" class="view active w-full text-center">
     <h1 class="text-5xl md:text-6xl font-bold font-orbitron text-yellow-400 mb-2 tracking-widest text-shadow">有向數大師挑戰賽</h1>
@@ -241,6 +241,7 @@ body {
             目標分數: <span id="game-score-value" class="font-bold text-xl md:text-2xl text-yellow-400">10</span>
         </div>
     </div>
+    
     <!-- Main Game Area -->
     <div class="flex-grow flex flex-col md:flex-row gap-4 mt-4 min-h-0">
         <!-- Host: Player Scores -->
@@ -280,7 +281,7 @@ body {
                     <button class="numpad-btn text-2xl p-4 font-bold text-red-400" data-key="C">C</button>
                     <button class="numpad-btn text-2xl p-4 font-bold col-span-4" data-key="0">0</button>
                     
-                    <!-- Red Card Penalty Overlay -->
+                    <!-- Red Card Penalty Overlay (Blocks Keypad Input) -->
                     <div id="red-card-overlay" class="red-card-overlay">
                         <div class="red-card mb-4">
                             <i class="fas fa-hand-paper text-4xl text-white mb-2"></i>
@@ -348,14 +349,14 @@ const db = getDatabase(app);
 
 let localState = {
     currentView: 'view-role-selection',
-    role: null, 
+    role: null,
     playerId: 'player_' + Math.random().toString(36).substr(2, 9),
     playerName: '',
     roomName: '',
     isReady: false,
     gameTimerInterval: null,
-    timerPaused: false, 
-    lastTimeLeft: null, 
+    timerPaused: false,
+    lastTimeLeft: null,
     roomUnsubscribe: null,
     gameUnsubscribe: null,
 };
@@ -414,10 +415,10 @@ const DOMElements = {
 const sfx = {
     click: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_bd27289b9b.mp3'),
     submit: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c34b17.mp3'),
-    correct: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'), // Punchy correct
-    wrong: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_731c5123a7.mp3'),   // Error buzz
+    correct: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'),
+    wrong: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_731c5123a7.mp3'),
     win: new Audio('https://cdn.pixabay.com/audio/2022/11/21/audio_a141b12bce.mp3'),
-    bgm: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3') // Intense BGM
+    bgm: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
 };
 sfx.bgm.loop = true;
 sfx.bgm.volume = 0.3;
@@ -435,7 +436,6 @@ function navigateTo(viewId) {
     localState.currentView = viewId;
 }
 
-// --- Detailed Question Generator ---
 const getRand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const getNZRand = (min, max) => { let v=0; while(v===0) v=getRand(min,max); return v; };
 const fmtS = (n, showPlus=true) => n < 0 ? `(${n})` : (showPlus ? `(+${n})` : `${n}`);
@@ -443,7 +443,6 @@ const fmtS = (n, showPlus=true) => n < 0 ? `(${n})` : (showPlus ? `(+${n})` : `$
 function generateQuestion(topic, difficulty) {
     let question = '', answer = 0, stepsArr = [];
     let n1, n2, n3, op1, op2;
-
     if (topic === 'add_sub') {
         if (difficulty === 'L1') {
             n1 = getRand(-30, 30); n2 = getRand(-30, 30);
@@ -453,7 +452,7 @@ function generateQuestion(topic, difficulty) {
             stepsArr.push(`${question}`);
             stepsArr.push(`= ${n1} ${op1 === '+' ? (n2>=0?'+':'-') : (n2>=0?'-':'+')} ${Math.abs(n2)}`);
             stepsArr.push(`= ${answer}`);
-        } else { // L2
+        } else {
             n1 = getRand(-40, 40); n2 = getRand(-40, 40); n3 = getRand(-40, 40);
             op1 = Math.random() > 0.5 ? '+' : '-'; op2 = Math.random() > 0.5 ? '+' : '-';
             question = `${fmtS(n1)} ${op1} ${fmtS(n2)} ${op2} ${fmtS(n3)}`;
@@ -469,26 +468,26 @@ function generateQuestion(topic, difficulty) {
     } else if (topic === 'mul_div') {
         if (difficulty === 'L1') {
             n1 = getNZRand(-20, 20); n2 = getNZRand(-15, 15);
-            if (Math.random() > 0.5) { // Mul
+            if (Math.random() > 0.5) {
                 question = `${fmtS(n1)} × ${fmtS(n2)}`;
                 answer = n1 * n2;
-            } else { // Div
+            } else {
                 answer = n1;
                 let prod = n1 * n2;
                 question = `${fmtS(prod, false)} ÷ ${fmtS(n2)}`;
             }
             stepsArr.push(`${question}`);
             stepsArr.push(`= ${answer}`);
-        } else { // L2
+        } else {
             n1 = getNZRand(-12, 12); n2 = getNZRand(-12, 12); n3 = getNZRand(-10, 10);
-            if (Math.random() > 0.5) { // A x B ÷ C (ensure exact division)
+            if (Math.random() > 0.5) {
                 let prod = n1 * n2 * n3;
                 question = `${fmtS(prod, false)} ÷ ${fmtS(n2)} ÷ ${fmtS(n3)}`;
                 answer = n1;
                 stepsArr.push(`${question}`);
                 stepsArr.push(`= ${prod / n2} ÷ ${fmtS(n3)}`);
                 stepsArr.push(`= ${answer}`);
-            } else { // A ÷ B × C
+            } else {
                 let start = n1 * n2;
                 question = `${fmtS(start, false)} ÷ ${fmtS(n1)} × ${fmtS(n3)}`;
                 answer = n2 * n3;
@@ -507,8 +506,8 @@ function generateQuestion(topic, difficulty) {
             stepsArr.push(`${question}`);
             stepsArr.push(`= ${n1} ${op1} (${mulRes})`);
             stepsArr.push(`= ${answer}`);
-        } else { // L2
-            n1 = getNZRand(-12, 12); n2 = getNZRand(-12, 12); 
+        } else {
+            n1 = getNZRand(-12, 12); n2 = getNZRand(-12, 12);
             n3 = getNZRand(-10, 10); let n4 = getNZRand(-10, 10);
             op1 = Math.random() > 0.5 ? '+' : '-';
             question = `${fmtS(n1)}${fmtS(n2)} ${op1} ${fmtS(n3)}${fmtS(n4)}`;
@@ -553,7 +552,7 @@ async function handleCreateRoom() {
             topic: DOMElements.hostGameTopic.value, difficulty: DOMElements.hostDifficulty.value,
         },
         players: { [localState.playerId]: { name: 'HOST', score: 0, isReady: true, isHost: true } },
-        timerState: { paused: true, lastTimeLeft: null, gameStartTime: null, totalPauseDuration: 0 } 
+        timerState: { paused: true, lastTimeLeft: null, gameStartTime: null, totalPauseDuration: 0 }
     });
     onDisconnect(roomRef).remove();
     joinLobby(roomName);
@@ -574,9 +573,9 @@ async function handleJoinRoom() {
     
     localState.roomName = roomName;
     localState.playerName = playerName;
-    // REQ 2: 所有玩家底分為 2 分
+    // penaltyCooldown 用來計算暫停的回合數
     const playerRef = ref(db, `rooms/${roomName}/players/${localState.playerId}`);
-    await set(playerRef, { name: playerName, score: 2, isReady: false, wrongCount: 0, skipRound: false });
+    await set(playerRef, { name: playerName, score: 2, isReady: false, wrongCount: 0, penaltyCooldown: 0 });
     onDisconnect(playerRef).remove();
     joinLobby(roomName);
 }
@@ -635,11 +634,11 @@ function startGame(initialRoomData) {
     if (localState.gameUnsubscribe) localState.gameUnsubscribe();
     localState.gameUnsubscribe = onValue(ref(db, 'rooms/' + localState.roomName), (snapshot) => {
         const roomData = snapshot.val();
-        if (!roomData || roomData.status === 'finished') { 
+        if (!roomData || roomData.status === 'finished') {
             if (localState.gameTimerInterval) clearInterval(localState.gameTimerInterval);
             sfx.bgm.pause();
             if(roomData) showWinner(roomData);
-            return; 
+            return;
         }
         updatePlayerScores(roomData.players);
         updateTimer(roomData);
@@ -668,7 +667,7 @@ function setupGameUI(settings) {
         DOMElements.gameTimer.style.display = 'none';
         DOMElements.gameScoreTarget.style.display = 'block';
         DOMElements.gameScoreValue.textContent = settings.modeValue;
-    } else { 
+    } else {
         DOMElements.gameScoreTarget.style.display = 'none';
         DOMElements.gameTimer.style.display = 'block';
     }
@@ -682,7 +681,7 @@ function updatePlayerScores(players) {
     if (localState.role !== 'host' || !DOMElements.hostPlayerScores) return;
     DOMElements.hostPlayerScores.innerHTML = '';
     Object.values(players||{}).filter(p => !p.isHost).sort((a,b) => b.score - a.score).forEach(p => {
-        let cards = p.skipRound ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
+        let cards = (p.penaltyCooldown > 0) ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
         DOMElements.hostPlayerScores.innerHTML += `
             <div class="flex justify-between items-center bg-slate-800 p-3 rounded-md mb-2 border border-slate-700">
                 <span class="font-bold text-lg">${p.name}</span>
@@ -719,19 +718,26 @@ async function handleAnswerSubmitted(roomData) {
     
     if (localState.role === 'host' && typeof q.is_correct === 'undefined') {
         const isCorrect = parseInt(q.submitted_answer) === q.correctAnswer;
-        // REQ 2: 計分系統 (L1: ±1, L2: ±2)
         const diffPts = roomData.settings.difficulty === 'L1' ? 1 : 2;
         const newScore = sub.score + (isCorrect ? diffPts : -diffPts);
+        
+        // 累計答錯次數
         const newWrong = isCorrect ? 0 : (sub.wrongCount || 0) + 1;
-        const shouldSkip = newWrong >= 2;
+        const shouldSuspend = newWrong >= 2;
         
         let up = {};
         up[`/current_question/is_correct`] = isCorrect;
         up[`/players/${q.submitted_by}/score`] = newScore;
-        up[`/players/${q.submitted_by}/wrongCount`] = shouldSkip ? 0 : newWrong;
-        up[`/players/${q.submitted_by}/skipRound`] = shouldSkip;
+        // 如果答錯滿 2 次，清空黃牌，並設定 penaltyCooldown = 2 (表示當前已滿兩次，下一次準備被鎖 1 回合)
+        up[`/players/${q.submitted_by}/wrongCount`] = shouldSuspend ? 0 : newWrong;
+        if (shouldSuspend) {
+            up[`/players/${q.submitted_by}/penaltyCooldown`] = 2;
+        }
+
         if (roomData.settings.mode === 'time') {
-            up[`/timerState/paused`] = true; up[`/timerState/lastTimeLeft`] = localState.lastTimeLeft; up[`/timerState/pauseStartTime`] = serverTimestamp();
+            up[`/timerState/paused`] = true; 
+            up[`/timerState/lastTimeLeft`] = localState.lastTimeLeft; 
+            up[`/timerState/pauseStartTime`] = serverTimestamp();
         }
         await update(ref(db, `rooms/${localState.roomName}`), up);
     } else if (typeof q.is_correct !== 'undefined') {
@@ -759,14 +765,23 @@ function resetForNewQuestion(roomData) {
     if (localState.role === 'player') {
         const myData = roomData.players[localState.playerId];
         if(myData) {
-            // REQ 1: 玩家版面當眼處顯示名稱
             DOMElements.playerInGameName.textContent = myData.name;
-            // REQ 2: 紅牌與黃牌邏輯
-            DOMElements.yellowCard.style.display = (myData.wrongCount === 1 && !myData.skipRound) ? 'flex' : 'none';
-            DOMElements.redCardOverlay.style.display = myData.skipRound ? 'flex' : 'none';
             
-            DOMElements.btnSubmitAnswer.disabled = myData.skipRound;
-            if(!myData.skipRound) DOMElements.btnSubmitAnswer.classList.add('pulse');
+            // 判斷是否正處於紅牌暫停期間
+            const isSuspended = (myData.penaltyCooldown || 0) > 0;
+            
+            // 若為 1 則亮出黃牌 (且沒有被暫停)
+            DOMElements.yellowCard.style.display = (myData.wrongCount === 1 && !isSuspended) ? 'flex' : 'none';
+            // 顯示覆蓋數字鍵盤的紅牌
+            DOMElements.redCardOverlay.style.display = isSuspended ? 'flex' : 'none';
+            
+            // 停用提交按鈕以防亂答
+            DOMElements.btnSubmitAnswer.disabled = isSuspended;
+            if(!isSuspended) {
+                DOMElements.btnSubmitAnswer.classList.add('pulse');
+            } else {
+                DOMElements.btnSubmitAnswer.classList.remove('pulse');
+            }
         }
         DOMElements.playerAnswerDisplay.textContent = '';
     } else {
@@ -779,7 +794,14 @@ async function handleNextQuestion() {
     const roomRef = ref(db, `rooms/${localState.roomName}`);
     const roomData = (await get(roomRef)).val();
     let up = {};
-    Object.keys(roomData.players||{}).forEach(id => { if (roomData.players[id].skipRound) up[`/players/${id}/skipRound`] = false; });
+    
+    // 扣除所有人的紅牌冷卻回合數 (2 -> 1 代表這回合開始被鎖；1 -> 0 代表下回合解鎖)
+    Object.keys(roomData.players||{}).forEach(id => { 
+        if (roomData.players[id].penaltyCooldown > 0) {
+            up[`/players/${id}/penaltyCooldown`] = roomData.players[id].penaltyCooldown - 1;
+        }
+    });
+    
     if(roomData.settings.mode === 'time' && roomData.timerState.paused) {
         up["/timerState/paused"] = false; up["/timerState/pauseStartTime"] = null;
         up["/timerState/totalPauseDuration"] = (roomData.timerState.totalPauseDuration||0) + (Date.now() - roomData.timerState.pauseStartTime);
@@ -792,7 +814,6 @@ function showWinner(roomData) {
     playSfx('win');
     DOMElements.winnerModal.style.display = 'flex';
     DOMElements.finalScores.innerHTML = '';
-    // REQ 5: 顯示頭三甲
     const sorted = Object.values(roomData.players).filter(p => !p.isHost).sort((a,b) => b.score - a.score);
     const ranks = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍'];
     const colors = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
@@ -833,7 +854,7 @@ async function handleSubmitAnswer() {
 }
 
 function updateHostModeOptions(e) {
-    DOMElements.hostModeValue.innerHTML = e.target.value === 'time' 
+    DOMElements.hostModeValue.innerHTML = e.target.value === 'time'
         ? `<option value="180">3分鐘</option><option value="300" selected>5分鐘</option><option value="600">10分鐘</option>`
         : `<option value="10">10分</option><option value="20" selected>20分</option><option value="30">30分</option>`;
 }
@@ -843,6 +864,7 @@ function init() {
     updateHostModeOptions({ target: DOMElements.hostGameMode });
     navigateTo('view-role-selection');
 }
+
 init();
 </script>
 </body>
