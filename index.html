@@ -1,1457 +1,849 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>有向數大師挑戰賽 | Directed Numbers Master Challenge</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        esports: {
-                            bg: '#0a0d18',
-                            card: '#13192e',
-                            border: '#2a3558',
-                            accent: '#f59e0b',
-                            gold: '#fbbf24',
-                            neonCyan: '#06b6d4',
-                            neonRed: '#ef4444',
-                            neonGreen: '#10b981'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['Courier New', 'monospace']
-                    },
-                    boxShadow: {
-                        'glow-gold': '0 0 20px rgba(251, 191, 36, 0.4)',
-                        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.4)',
-                        'glow-red': '0 0 20px rgba(239, 68, 68, 0.4)',
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- MathJax for Math Rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js" async></script>
-    
-    <style>
-        body {
-            background-color: #0a0d18;
-            background-image: 
-                radial-gradient(circle at 50% 20%, rgba(30, 41, 89, 0.6) 0%, transparent 70%),
-                radial-gradient(circle at 80% 80%, rgba(15, 23, 42, 0.8) 0%, transparent 50%);
-            color: #f3f4f6;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>有向數大師挑戰賽</title>
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Fonts for Esports Feel -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/***** Custom Styles & Animations *****/
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: radial-gradient(circle, #1a2a45, #111827, #000000);
+    color: #e5e7eb;
+    overflow: hidden;
+}
+.font-orbitron { font-family: 'Orbitron', sans-serif; }
+.btn-gold {
+    background-image: linear-gradient(to right, #FBBF24 0%, #F59E0B 51%, #FBBF24 100%);
+    transition: 0.5s;
+    background-size: 200% auto;
+    color: #1e293b;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    border: 2px solid #FBBF24;
+}
+.btn-gold:hover { background-position: right center; }
+.btn-gold:disabled {
+    background-image: none;
+    background-color: #4b5563;
+    color: #9ca3af;
+    border-color: #374151;
+    cursor: not-allowed;
+}
+.btn-slate {
+    background-image: linear-gradient(to right, #475569 0%, #334155 51%, #475569 100%);
+    transition: 0.5s;
+    background-size: 200% auto;
+    color: white;
+    border: 2px solid #64748b;
+}
+.btn-slate:hover { background-position: right center; }
+.btn-slate:disabled {
+    background: #1e293b;
+    color: #475569;
+    border-color: #334155;
+    cursor: not-allowed;
+}
+.view { display: none; }
+.view.active { display: block; }
+.pulse { animation: pulse-animation 2s infinite; }
+@keyframes pulse-animation {
+    0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+.stamp {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(3) rotate(-15deg);
+    opacity: 0;
+    transition: all 0.3s ease-out;
+    border: 8px solid;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 3rem;
+    font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+}
+.stamp.show {
+    transform: translate(-50%, -50%) scale(1) rotate(-15deg);
+    opacity: 1;
+}
+.stamp-correct { color: #22c55e; border-color: #22c55e; }
+.stamp-wrong { color: #ef4444; border-color: #ef4444; }
+.numpad-btn {
+    background: rgba(30, 41, 59, 0.9);
+    backdrop-filter: blur(5px);
+    border: 2px solid #475569;
+    transition: all 0.2s;
+    border-radius: 8px;
+}
+.numpad-btn:hover { background: #64748b; color: #fff; }
+.numpad-btn:active { transform: scale(0.95); }
+.error-message { color: #ef4444; font-weight: bold; display: none; margin-top: 0.5rem; }
 
-        .esports-border {
-            border: 1px solid #2a3558;
-            background: linear-gradient(135deg, rgba(19, 25, 46, 0.9) 0%, rgba(10, 13, 24, 0.95) 100%);
-        }
-
-        .esports-btn {
-            position: relative;
-            transition: all 0.15s ease-in-out;
-            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-        }
-
-        .esports-btn:active {
-            transform: scale(0.96);
-        }
-
-        /* Keypad pulse glow */
-        .keypad-btn {
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid #334155;
-            transition: all 0.1s ease;
-        }
-        .keypad-btn:active {
-            background: #3b82f6;
-            box-shadow: 0 0 15px #3b82f6;
-            color: #ffffff;
-            transform: scale(0.95);
-        }
-
-        /* Stamp animation */
-        @keyframes stampIn {
-            0% { opacity: 0; transform: scale(3) rotate(-15deg); }
-            50% { opacity: 1; transform: scale(1) rotate(-15deg); }
-            70% { transform: scale(1.1) rotate(-15deg); }
-            100% { transform: scale(1) rotate(-15deg); }
-        }
-        .stamp-correct {
-            animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            border: 4px solid #10b981;
-            color: #10b981;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-        }
-        .stamp-wrong {
-            animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            border: 4px solid #ef4444;
-            color: #ef4444;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
-        }
-
-        /* Pulse animation for Submit button */
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.6); }
-            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.9); }
-        }
-        .btn-pulse {
-            animation: pulseGlow 2s infinite;
-        }
-
-        /* Confetti / victory effect overlay */
-        .victory-glow {
-            animation: vicGlow 1s ease-in-out infinite alternate;
-        }
-        @keyframes vicGlow {
-            from { text-shadow: 0 0 10px #fbbf24, 0 0 20px #fbbf24; }
-            to { text-shadow: 0 0 25px #f59e0b, 0 0 40px #fbbf24; }
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0a0d18;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #2a3558;
-            border-radius: 3px;
-        }
-    </style>
+/* Yellow / Red Cards CSS */
+.yellow-card {
+    position: absolute;
+    top: -20px; right: 10px;
+    width: 40px; height: 60px;
+    background-color: #fbbf24;
+    border: 3px solid #b45309;
+    border-radius: 4px;
+    transform: rotate(15deg);
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.5);
+    display: none;
+    align-items: center; justify-content: center;
+    color: #000; font-weight: 900; font-size: 0.8rem;
+    z-index: 5;
+    animation: popIn 0.5s ease-out;
+}
+.red-card-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(127, 29, 29, 0.85);
+    backdrop-filter: blur(4px);
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    border-radius: 0.5rem;
+    z-index: 10;
+}
+.red-card {
+    width: 100px; height: 150px;
+    background-color: #ef4444;
+    border: 4px solid #7f1d1d;
+    border-radius: 8px;
+    transform: rotate(-10deg);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn { 0% { transform: scale(0) rotate(0); } 100% { transform: scale(1) rotate(15deg); } }
+@keyframes dropIn { 0% { transform: translateY(-100px) rotate(0); opacity: 0; } 100% { transform: translateY(0) rotate(-10deg); opacity: 1; } }
+@keyframes crown-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+</style>
 </head>
-<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 overflow-x-hidden font-sans">
+<body class="w-screen h-screen flex items-center justify-center">
+<div id="app-container" class="w-full h-full max-w-4xl mx-auto p-4 flex flex-col items-center justify-center">
+<!-- 1. ROLE SELECTION VIEW -->
+<div id="view-role-selection" class="view active w-full text-center">
+    <h1 class="text-5xl md:text-6xl font-bold font-orbitron text-yellow-400 mb-2 tracking-widest text-shadow">有向數大師挑戰賽</h1>
+    <p class="text-slate-300 mb-12 text-lg">Directed Numbers Master Championship</p>
+    <div class="flex gap-4 md:gap-8 justify-center">
+        <button id="btn-select-host" class="btn-gold text-xl md:text-2xl font-bold py-4 px-8 md:py-6 md:px-12 rounded-lg shadow-lg pulse">我是主持 (Host)</button>
+        <button id="btn-select-player" class="btn-slate text-xl md:text-2xl font-bold py-4 px-8 md:py-6 md:px-12 rounded-lg shadow-lg">我是玩家 (Player)</button>
+    </div>
+</div>
 
-    <!-- Top Bar: Sound, Language, App Title -->
-    <header class="w-full max-w-5xl flex justify-between items-center py-2 px-4 mb-2 bg-slate-900/80 backdrop-blur rounded-xl border border-slate-800">
-        <div class="flex items-center space-x-3">
-            <i class="fa-solid fa-trophy text-amber-400 text-xl sm:text-2xl animate-bounce"></i>
+<!-- 2A. HOST SETUP VIEW -->
+<div id="view-host-setup" class="view w-full max-w-md">
+    <h2 class="text-4xl font-bold font-orbitron text-yellow-400 mb-6 text-center">建立遊戲房間</h2>
+    <div class="space-y-4 bg-slate-800/50 p-6 rounded-lg">
+        <div>
+            <label class="block mb-2 text-md text-slate-300">房間名稱 (Room Name)</label>
+            <input id="host-room-name" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none" placeholder="e.g., S1A 數學小組">
+        </div>
+        <div>
+            <label class="block mb-2 text-md text-slate-300">房間密碼 (Password - 可選)</label>
+            <input id="host-room-password" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none" placeholder="e.g., 1234">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
             <div>
-                <h1 class="text-base sm:text-xl font-black bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent tracking-wider">
-                    <span id="title-text">有向數大師挑戰賽</span>
-                </h1>
-                <p class="text-xs text-slate-400 hidden sm:block">DIRECTED NUMBERS MASTER CHALLENGE</p>
+                <label for="host-game-mode" class="block mb-2 text-md text-slate-300">比賽模式</label>
+                <select id="host-game-mode" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none">
+                    <option value="time">限時模式</option>
+                    <option value="score">目標分數模式</option>
+                </select>
             </div>
+            <div>
+                <label for="host-mode-value" class="block mb-2 text-md text-slate-300">模式數值</label>
+                <select id="host-mode-value" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none"></select>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="host-game-topic" class="block mb-2 text-md text-slate-300">遊戲項目</label>
+                <select id="host-game-topic" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none">
+                    <option value="add_sub">有向數加減</option>
+                    <option value="mul_div">有向數乘除</option>
+                    <option value="mixed">四則運算</option>
+                </select>
+            </div>
+            <div>
+                <label for="host-difficulty" class="block mb-2 text-md text-slate-300">遊戲難度</label>
+                <select id="host-difficulty" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none">
+                    <option value="L1">Level 1</option>
+                    <option value="L2">Level 2</option>
+                </select>
+            </div>
+        </div>
+        <button id="btn-create-room" class="btn-gold w-full font-bold text-lg py-3 rounded-lg mt-4">建立房間</button>
+        <button id="btn-host-back" class="btn-slate w-full font-bold text-lg py-3 rounded-lg mt-2">返回</button>
+    </div>
+</div>
+
+<!-- 2B. PLAYER JOIN VIEW -->
+<div id="view-player-join" class="view w-full max-w-md">
+    <h2 class="text-4xl font-bold font-orbitron text-yellow-400 mb-6 text-center">加入遊戲房間</h2>
+    <div class="space-y-4 bg-slate-800/50 p-6 rounded-lg">
+        <div>
+            <label class="block mb-2 text-md text-slate-300">房間名稱 (Room Name)</label>
+            <input id="player-room-name" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none" placeholder="輸入主持提供的房間名稱">
+            <p id="player-room-error" class="error-message">你所選擇的房間還未開設，請向主持人查詢。</p>
+        </div>
+        <div>
+            <label class="block mb-2 text-md text-slate-300">房間密碼 (Password - 如有)</label>
+            <input id="player-room-password" type="password" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none">
+        </div>
+        <div>
+            <label class="block mb-2 text-md text-slate-300">玩家名稱 (Your Name)</label>
+            <input id="player-name" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-md p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none" placeholder="必須輸入你的遊戲名稱！">
+        </div>
+        <button id="btn-join-room" class="btn-gold w-full font-bold text-lg py-3 rounded-lg mt-4">加入房間</button>
+        <button id="btn-player-back" class="btn-slate w-full font-bold text-lg py-3 rounded-lg mt-2">返回</button>
+    </div>
+</div>
+
+<!-- 3. LOBBY VIEW -->
+<div id="view-lobby" class="view w-full max-w-4xl">
+    <div class="text-center mb-6">
+        <h2 class="text-4xl font-bold font-orbitron text-yellow-400">遊戲大廳</h2>
+        <p class="text-2xl text-slate-300">房間: <span id="lobby-room-name" class="font-bold"></span></p>
+    </div>
+    <div id="lobby-player-list" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"></div>
+    <div id="lobby-player-controls" class="text-center">
+        <button id="btn-player-ready" class="btn-gold text-2xl font-bold py-4 px-10 rounded-lg">準備 (Ready)</button>
+    </div>
+    <div id="lobby-host-controls" class="text-center" style="display: none;">
+        <p class="text-slate-400 mb-4">等待所有玩家準備...</p>
+        <button id="btn-host-start" class="btn-gold text-2xl font-bold py-4 px-10 rounded-lg pulse" disabled>開始遊戲 (Start Game)</button>
+    </div>
+</div>
+
+<!-- 4. GAME VIEW -->
+<div id="view-game" class="view w-full h-full flex flex-col">
+    <!-- Game Header -->
+    <div id="game-header" class="hidden flex justify-between items-center p-2 md:p-4 bg-black/30 rounded-t-lg">
+        <div id="game-info" class="text-xs md:text-lg">
+            <span id="game-topic-display"></span> | <span id="game-difficulty-display"></span>
+        </div>
+        <div id="game-timer" class="font-orbitron text-4xl md:text-5xl text-yellow-400 tracking-widest">00:00</div>
+        <div id="game-score-target" class="text-xs md:text-lg text-right">
+            目標分數: <span id="game-score-value" class="font-bold text-xl md:text-2xl text-yellow-400">10</span>
+        </div>
+    </div>
+    <!-- Main Game Area -->
+    <div class="flex-grow flex flex-col md:flex-row gap-4 mt-4 min-h-0">
+        <!-- Host: Player Scores -->
+        <div id="host-game-view" class="w-full md:w-1/4 bg-slate-900/50 p-2 md:p-4 rounded-lg hidden overflow-y-auto">
+            <h3 class="text-xl md:text-2xl font-bold text-yellow-400 mb-4 text-center">玩家分數</h3>
+            <div id="host-player-scores" class="space-y-2"></div>
         </div>
         
-        <div class="flex items-center space-x-2">
-            <!-- Music / Sound Toggle -->
-            <button id="btn-sound" onclick="toggleAudio()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm border border-slate-700 flex items-center gap-2">
-                <i id="sound-icon" class="fa-solid fa-volume-high text-amber-400"></i>
-                <span id="sound-label" class="hidden sm:inline">音效: 開</span>
-            </button>
-            <!-- Language Switcher -->
-            <button id="btn-lang" onclick="toggleLanguage()" class="px-3 py-1.5 rounded-lg bg-indigo-950 hover:bg-indigo-900 text-xs sm:text-sm border border-indigo-700 font-bold text-cyan-400">
-                <i class="fa-solid fa-globe mr-1"></i><span id="lang-label">English</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- MAIN CONTAINER -->
-    <main class="w-full max-w-5xl flex-grow flex flex-col justify-center items-center my-auto">
-
-        <!-- VIEW 1: ROLE SELECTION (Host or Player) -->
-        <div id="view-role-select" class="w-full max-w-md esports-border p-6 sm:p-8 rounded-2xl text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
-            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
-
-            <div class="mb-6">
-                <div class="inline-block p-4 rounded-full bg-indigo-950/80 border border-indigo-800/80 mb-3 text-amber-400 text-3xl shadow-glow-gold">
-                    <i class="fa-solid fa-[#fa-gamepad] fa-gamepad"></i>
-                </div>
-                <h2 class="text-2xl font-black text-white tracking-wide" data-i18n="selectRole">請選擇身份</h2>
-                <p class="text-xs text-slate-400 mt-1" data-i18n="selectRoleSub">建立對戰房間或加入現有比賽</p>
+        <!-- Center Panel: Question & Numpad -->
+        <div id="game-center-panel" class="flex-grow flex flex-col items-center justify-center bg-slate-900/50 rounded-lg p-4 md:p-6 relative">
+            <div id="question-container" class="mb-6 text-center">
+                <p id="question-text" class="text-5xl md:text-7xl font-bold font-orbitron tracking-wider text-white"></p>
             </div>
-
-            <div class="grid grid-cols-1 gap-4">
-                <button onclick="selectRole('host')" class="esports-btn w-full py-4 px-6 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-slate-950 font-black text-lg rounded-xl shadow-glow-gold flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-user-shield text-xl"></i>
-                    <span data-i18n="roleHost">我是主持 (Host)</span>
-                </button>
-                <button onclick="selectRole('player')" class="esports-btn w-full py-4 px-6 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-lg rounded-xl shadow-glow-cyan flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-gamepad text-xl"></i>
-                    <span data-i18n="rolePlayer">我是玩家 (Player)</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- VIEW 2A: HOST ROOM CREATION FORM -->
-        <div id="view-host-setup" class="hidden w-full max-w-lg esports-border p-6 sm:p-8 rounded-2xl shadow-2xl">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-3">
-                <h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders"></i> <span data-i18n="hostSetupTitle">主持設定比賽房間</span>
-                </h2>
-                <button onclick="showView('view-role-select')" class="text-slate-400 hover:text-white text-sm">
-                    <i class="fa-solid fa-arrow-left mr-1"></i><span data-i18n="btnBack">返回</span>
-                </button>
-            </div>
-
-            <form onsubmit="handleCreateRoom(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblRoomName">房間名稱 *</label>
-                    <input type="text" id="host-room-name" required placeholder="例如: 1A_Math_Battle" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-amber-400">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblRoomPass">房間密碼 (選填)</label>
-                    <input type="password" id="host-room-pass" placeholder="無需密碼請留空" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-amber-400">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblMode">比賽模式</label>
-                        <select id="host-game-mode" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-amber-400">
-                            <option value="time_3" data-i18n="optTime3">限時模式 - 3分鐘</option>
-                            <option value="time_5" selected data-i18n="optTime5">限時模式 - 5分鐘 (預設)</option>
-                            <option value="time_10" data-i18n="optTime10">限時模式 - 10分鐘</option>
-                            <option value="target_5" data-i18n="optScore5">目標分數 - 5分</option>
-                            <option value="target_10" data-i18n="optScore10">目標分數 - 10分</option>
-                            <option value="target_15" data-i18n="optScore15">目標分數 - 15分</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblCategory">比賽項目</label>
-                        <select id="host-category" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-amber-400">
-                            <option value="add_sub" data-i18n="catAddSub">有向數加減</option>
-                            <option value="mul_div" data-i18n="catMulDiv">有向數乘除</option>
-                            <option value="mixed" data-i18n="catMixed">有向數四則運算</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblDifficulty">遊戲難度</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-amber-400">
-                            <input type="radio" name="difficulty" value="L1" checked class="accent-amber-400">
-                            <span class="text-sm font-bold text-white">Level 1</span>
-                            <span class="text-xs text-slate-400 block" data-i18n="diffL1Desc">(底分2分, +/-1分)</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-amber-400">
-                            <input type="radio" name="difficulty" value="L2" class="accent-amber-400">
-                            <span class="text-sm font-bold text-white">Level 2</span>
-                            <span class="text-xs text-slate-400 block" data-i18n="diffL2Desc">(底分2分, +/-2分)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <button type="submit" class="esports-btn w-full py-4 mt-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-lg rounded-xl shadow-glow-gold">
-                    <i class="fa-solid fa-plus-circle mr-2"></i><span data-i18n="btnCreateRoom">創建比賽房間</span>
-                </button>
-            </form>
-        </div>
-
-        <!-- VIEW 2B: PLAYER JOIN ROOM FORM -->
-        <div id="view-player-setup" class="hidden w-full max-w-md esports-border p-6 sm:p-8 rounded-2xl shadow-2xl">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-3">
-                <h2 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
-                    <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="playerJoinTitle">玩家加入比賽</span>
-                </h2>
-                <button onclick="showView('view-role-select')" class="text-slate-400 hover:text-white text-sm">
-                    <i class="fa-solid fa-arrow-left mr-1"></i><span data-i18n="btnBack">返回</span>
-                </button>
-            </div>
-
-            <form onsubmit="handleJoinRoom(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblPlayerName">玩家姓名 / 暱稱 *</label>
-                    <input type="text" id="player-name" required placeholder="例如: Alex / 3A01" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-400">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblRoomName">房間名稱 *</label>
-                    <input type="text" id="player-room-name" required placeholder="請輸入主持提供的房間名稱" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-400">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1" data-i18n="lblRoomPass">房間密碼 (如適用)</label>
-                    <input type="password" id="player-room-pass" placeholder="若無密碼可留空" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-400">
-                </div>
-
-                <button type="submit" class="esports-btn w-full py-4 mt-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-lg rounded-xl shadow-glow-cyan">
-                    <i class="fa-solid fa-sign-in-alt mr-2"></i><span data-i18n="btnJoinRoom">進入對戰室</span>
-                </button>
-            </form>
-        </div>
-
-        <!-- VIEW 3: LOBBY / WAITING ROOM -->
-        <div id="view-lobby" class="hidden w-full max-w-2xl esports-border p-6 sm:p-8 rounded-2xl shadow-2xl">
-            <div class="text-center mb-6">
-                <span id="lobby-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300">
-                    LOBBY
-                </span>
-                <h2 id="lobby-room-title" class="text-2xl font-black text-white mt-2">--</h2>
-                <div id="lobby-config-info" class="text-xs text-slate-400 mt-1 flex justify-center gap-3 flex-wrap"></div>
-            </div>
-
-            <!-- Player List Grid (Max 10) -->
-            <div class="mb-6">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider" data-i18n="lobbyPlayersList">已加入玩家 (最多 10 人)</span>
-                    <span id="lobby-count" class="text-xs font-bold text-cyan-400">0 / 10</span>
-                </div>
-                <div id="lobby-players-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3 min-h-[120px]">
-                    <!-- Player Cards inserted dynamically -->
-                </div>
-            </div>
-
-            <!-- Controls (Ready Button for Players, Start Game Button for Host) -->
-            <div class="pt-4 border-t border-slate-800 flex justify-center">
-                <div id="host-lobby-actions" class="hidden w-full text-center">
-                    <button id="btn-start-game" onclick="hostStartGame()" class="esports-btn w-full sm:w-2/3 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xl rounded-xl shadow-glow-gold opacity-50 cursor-not-allowed" disabled>
-                        <i class="fa-solid fa-play mr-2"></i><span data-i18n="btnStartGame">開始遊戲 (等待玩家準備)</span>
-                    </button>
-                    <p class="text-xs text-slate-400 mt-2" data-i18n="hostStartTip">需所有玩家按下「準備」後方可開始</p>
-                </div>
-
-                <div id="player-lobby-actions" class="hidden w-full text-center">
-                    <button id="btn-player-ready" onclick="playerToggleReady()" class="esports-btn w-full sm:w-2/3 py-4 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-xl rounded-xl shadow-glow-cyan">
-                        <i class="fa-solid fa-check-circle mr-2"></i><span id="ready-btn-text" data-i18n="btnReady">按下「準備」</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW 4: ARENA / GAMEPLAY -->
-        <div id="view-arena" class="hidden w-full flex flex-col items-center gap-4">
             
-            <!-- Dashboard Timer & Header Bar -->
-            <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="px-3 py-1 rounded-lg bg-indigo-950 border border-indigo-800 text-amber-400 font-bold text-sm">
-                        <span id="arena-category-tag">--</span>
-                    </div>
-                    <div class="px-3 py-1 rounded-lg bg-indigo-950 border border-indigo-800 text-cyan-400 font-bold text-sm">
-                        <span id="arena-diff-tag">Level 1</span>
-                    </div>
+            <!-- Player Numpad View -->
+            <div id="player-game-view" class="w-full max-w-xs md:max-w-sm hidden relative mt-4">
+                <!-- Player Name Display -->
+                <div class="text-center mb-2">
+                    <span id="player-ingame-name" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-widest uppercase bg-black/50 px-4 py-1 rounded-full shadow-lg border border-yellow-500/50"></span>
                 </div>
-
-                <!-- Digital Clock Display -->
-                <div class="flex items-center gap-3 bg-slate-950 px-6 py-2 rounded-xl border border-amber-500/30 shadow-glow-gold">
-                    <i class="fa-solid fa-stopwatch text-amber-400 text-xl animate-pulse"></i>
-                    <div class="text-2xl font-black font-mono text-amber-400 tracking-wider" id="arena-timer">00:00</div>
-                </div>
-
-                <!-- Mode/Score Target Info -->
-                <div class="text-xs text-slate-400 font-mono text-center sm:text-right">
-                    <div data-i18n="gameModeLabel">比賽模式</div>
-                    <div id="arena-mode-desc" class="text-white font-bold">--</div>
-                </div>
-            </div>
-
-            <!-- Main Layout Split: Left (Question & Arena), Right (Leaderboard) -->
-            <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                <!-- Yellow Card Icon -->
+                <div id="yellow-card" class="yellow-card">警告</div>
                 
-                <!-- Left Section: Question Card & Keypad (or Host Controls) -->
-                <div class="lg:col-span-8 flex flex-col gap-4">
+                <div id="player-answer-display" class="w-full h-16 md:h-20 bg-slate-800 rounded-t-lg border-2 border-b-0 border-slate-500 text-white text-4xl md:text-5xl text-right p-3 font-orbitron shadow-inner"></div>
+                <div class="grid grid-cols-4 gap-2 bg-slate-800 p-2 border-2 border-t-0 border-slate-500 rounded-b-lg shadow-lg relative">
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="7">7</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="8">8</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="9">9</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold text-yellow-400" data-key="+">＋</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="4">4</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="5">5</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="6">6</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold text-yellow-400" data-key="-">－</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="1">1</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="2">2</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold" data-key="3">3</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold text-red-400" data-key="C">C</button>
+                    <button class="numpad-btn text-2xl p-4 font-bold col-span-4" data-key="0">0</button>
                     
-                    <!-- Question Card -->
-                    <div class="esports-border p-6 sm:p-8 rounded-2xl text-center shadow-2xl relative min-h-[220px] flex flex-col justify-center items-center">
-                        <div class="text-xs font-bold text-amber-400/80 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-bolt"></i> <span data-i18n="lblCurrentQuestion">當前搶答題目</span>
+                    <!-- Red Card Penalty Overlay -->
+                    <div id="red-card-overlay" class="red-card-overlay">
+                        <div class="red-card mb-4">
+                            <i class="fas fa-hand-paper text-4xl text-white mb-2"></i>
+                            <span class="text-white text-3xl font-black">OUT</span>
                         </div>
-                        
-                        <!-- Math Expression Display -->
-                        <div id="question-display" class="text-3xl sm:text-4xl font-extrabold text-white my-4 tracking-wide font-mono">
-                            <!-- MathJax / Math Rendered Here -->
-                            載入題目中...
-                        </div>
-
-                        <!-- Status indicator banner -->
-                        <div id="question-status-banner" class="text-xs font-bold px-4 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                            <i class="fa-solid fa-circle-play text-emerald-400 mr-1"></i> <span data-i18n="statusBuzzing">玩家搶答中...</span>
-                        </div>
-                    </div>
-
-                    <!-- PLAYER CONTROLS: Display Keypad & Red Card Overlay -->
-                    <div id="player-controls-container" class="hidden flex flex-col items-center gap-3 relative">
-                        
-                        <!-- RED CARD / FROZEN OVERLAY -->
-                        <div id="red-card-overlay" class="hidden absolute inset-0 z-20 bg-red-950/90 backdrop-blur-md rounded-2xl border-2 border-red-500 flex flex-col justify-center items-center p-6 text-center animate-bounce">
-                            <div class="text-red-500 text-6xl mb-2"><i class="fa-solid fa-square text-red-600 border-2 border-white rounded-md"></i></div>
-                            <h3 class="text-2xl font-black text-white" data-i18n="redCardTitle">連續 2 題答錯！</h3>
-                            <p class="text-sm text-red-200 mt-1" data-i18n="redCardDesc">紅牌懲罰：本回合暫停作答 1 次以示警惕。</p>
-                        </div>
-
-                        <!-- Answer Input Preview Box (Readonly) -->
-                        <div class="w-full max-w-md bg-slate-950 border-2 border-cyan-500/50 rounded-xl p-3 flex justify-between items-center shadow-glow-cyan">
-                            <span class="text-xs text-slate-400 font-bold uppercase" data-i18n="yourAnswer">你的答案:</span>
-                            <div id="player-answer-input" class="text-2xl font-black font-mono text-cyan-400 tracking-wider min-h-[32px]"></div>
-                        </div>
-
-                        <!-- Custom Touch Keypad (0-9, -, ., /, C, Submit) -->
-                        <div class="w-full max-w-md grid grid-cols-4 gap-2">
-                            <button onclick="keypadInput('7')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">7</button>
-                            <button onclick="keypadInput('8')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">8</button>
-                            <button onclick="keypadInput('9')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">9</button>
-                            <button onclick="keypadInput('/')" class="keypad-btn py-4 text-xl font-bold text-amber-400 rounded-xl">/</button>
-
-                            <button onclick="keypadInput('4')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">4</button>
-                            <button onclick="keypadInput('5')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">5</button>
-                            <button onclick="keypadInput('6')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">6</button>
-                            <button onclick="keypadInput('-')" class="keypad-btn py-4 text-xl font-bold text-amber-400 rounded-xl">-</button>
-
-                            <button onclick="keypadInput('1')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">1</button>
-                            <button onclick="keypadInput('2')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">2</button>
-                            <button onclick="keypadInput('3')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">3</button>
-                            <button onclick="keypadInput('.')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">.</button>
-
-                            <button onclick="keypadInput('0')" class="keypad-btn py-4 text-xl font-bold text-white rounded-xl">0</button>
-                            <button onclick="keypadClear()" class="keypad-btn py-4 text-base font-bold text-red-400 rounded-xl" data-i18n="keyClear">清除</button>
-                            <button id="btn-submit-answer" onclick="submitAnswer()" class="col-span-2 esports-btn py-4 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xl rounded-xl btn-pulse flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-paper-plane"></i> <span data-i18n="btnSubmit">提交答案</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- HOST CONTROLS: Next Question & Game Controls -->
-                    <div id="host-controls-container" class="hidden esports-border p-4 rounded-2xl flex justify-between items-center bg-slate-900/80">
-                        <div class="text-xs text-slate-400">
-                            <i class="fa-solid fa-crown text-amber-400 mr-1"></i> <span data-i18n="hostControlNotice">主持控制台: 有玩家提交後時間會暫停，請檢視解題步驟後點擊「下一題」。</span>
-                        </div>
-                        <button id="btn-next-question" onclick="hostNextQuestion()" class="esports-btn px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-xl shadow-glow-cyan text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-forward"></i> <span data-i18n="btnNextQuestion">下一題</span>
-                        </button>
-                    </div>
-
-                </div>
-
-                <!-- Right Section: Leaderboard / Player Cards -->
-                <div class="lg:col-span-4 esports-border p-4 rounded-2xl">
-                    <h3 class="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                        <i class="fa-solid fa-list-ol"></i> <span data-i18n="leaderboardTitle">即時排行榜</span>
-                    </h3>
-                    <div id="arena-leaderboard" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                        <!-- Dynamic Player Score Cards -->
+                        <p class="text-2xl font-bold text-white text-center shadow-black drop-shadow-md">連續答錯兩題<br><span class="text-yellow-400">暫停一回合</span></p>
                     </div>
                 </div>
-
-            </div>
-        </div>
-
-    </main>
-
-    <!-- MODAL 1: SYNCHRONOUS ROUND REVIEW / EXPLANATION MODAL -->
-    <div id="modal-review" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex justify-center items-center p-4">
-        <div class="w-full max-w-xl esports-border p-6 sm:p-8 rounded-2xl shadow-2xl relative text-center border-2 border-slate-700">
-            
-            <!-- STAMP OVERLAY -->
-            <div class="absolute -top-6 right-6">
-                <div id="stamp-badge" class="px-6 py-2 rounded-xl text-xl sm:text-2xl font-black uppercase tracking-widest transform -rotate-12">
-                    --
-                </div>
-            </div>
-
-            <div class="text-xs text-slate-400 uppercase tracking-widest mb-1" data-i18n="submittedBy">搶答玩家</div>
-            <h3 id="review-player-name" class="text-xl font-black text-cyan-400 mb-4">--</h3>
-
-            <!-- Submitted Answer Card -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
-                <span class="text-xs text-slate-400 block mb-1" data-i18n="lblPlayerSubmission">提交之答案:</span>
-                <span id="review-player-answer" class="text-3xl font-black text-white font-mono">--</span>
-            </div>
-
-            <!-- Step-by-Step Typewriter Solution -->
-            <div class="bg-indigo-950/50 border border-indigo-800/60 rounded-xl p-4 text-left mb-6">
-                <div class="text-xs font-bold text-amber-400 mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-graduation-cap"></i> <span data-i18n="stepByStepTitle">正確答案與詳細解題步驟:</span>
-                </div>
-                <div id="review-solution-steps" class="font-mono text-sm sm:text-base text-cyan-200 leading-relaxed min-h-[60px] whitespace-pre-line">
-                    <!-- Typewriter effect content -->
-                </div>
-            </div>
-
-            <!-- Host / Player Next Action Notice -->
-            <div id="review-footer-notice" class="text-xs text-slate-400 italic">
-                <!-- Host see button or player sees waiting text -->
+                <button id="btn-submit-answer" class="btn-gold w-full text-2xl font-black py-4 mt-4 rounded-lg pulse tracking-widest shadow-xl">提交答案</button>
             </div>
             
-            <div id="modal-review-host-btn" class="hidden mt-4">
-                <button onclick="hostNextQuestion()" class="esports-btn px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-base rounded-xl shadow-glow-gold">
-                    <i class="fa-solid fa-arrow-right mr-1"></i> <span data-i18n="btnNextQuestion">下一題</span>
-                </button>
+            <!-- Host Status View -->
+            <div id="host-control-view" class="text-center hidden w-full">
+                <p id="host-status-text" class="text-2xl md:text-3xl font-bold text-slate-300 mb-4 animate-pulse">等待玩家搶答...</p>
             </div>
         </div>
     </div>
-
-    <!-- MODAL 2: VICTORY & FINAL LEADERBOARD MODAL -->
-    <div id="modal-victory" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-lg flex justify-center items-center p-4">
-        <div class="w-full max-w-xl esports-border p-6 sm:p-8 rounded-2xl shadow-2xl text-center relative border-2 border-amber-500/50 shadow-glow-gold">
-            <div class="text-amber-400 text-6xl mb-2 animate-bounce">
-                <i class="fa-solid fa-trophy victory-glow"></i>
+    
+    <!-- Result Modal -->
+    <div id="result-modal" style="display: none;" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-40 p-4 backdrop-blur-sm">
+        <div id="result-stamp" class="stamp"></div>
+        <div class="text-center bg-slate-900 border border-slate-700 p-8 rounded-2xl shadow-2xl w-full max-w-3xl">
+            <p class="mb-2 text-slate-400 text-lg">搶答玩家: <span id="result-submitter" class="font-bold text-yellow-400 text-2xl"></span></p>
+            <p class="mb-4 text-3xl md:text-4xl">提交答案: <span id="result-submitted-answer" class="font-orbitron font-bold"></span></p>
+            <hr class="border-slate-700 my-6">
+            <p class="mb-2 text-2xl text-green-400 font-bold">正確答案</p>
+            <p id="result-correct-answer" class="text-5xl md:text-6xl font-orbitron font-black text-green-300 mb-8 tracking-wider"></p>
+            <div class="bg-slate-800 p-6 rounded-lg text-left inline-block w-full">
+                <p class="mb-3 text-xl text-yellow-400 font-bold border-b border-slate-600 pb-2"><i class="fas fa-list-ol mr-2"></i>解題步驟</p>
+                <div id="result-steps" class="text-xl md:text-2xl font-mono text-slate-200 leading-relaxed space-y-2"></div>
             </div>
-            <h2 class="text-3xl font-black text-white tracking-wider" data-i18n="vicTitle">比賽結束！錦標賽冠軍誕生！</h2>
-            
-            <div class="my-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 border border-amber-500/40">
-                <div class="text-xs font-bold text-amber-300 uppercase tracking-widest" data-i18n="championLabel">獲勝者 (CHAMPION)</div>
-                <div id="victory-winner-name" class="text-3xl font-black text-amber-400 my-1">--</div>
-                <div id="victory-winner-score" class="text-sm font-bold text-white">--</div>
-            </div>
-
-            <h4 class="text-xs font-bold text-slate-400 text-left uppercase mb-2" data-i18n="finalScoresTitle">最終成績榜:</h4>
-            <div id="victory-leaderboard" class="space-y-2 max-h-[200px] overflow-y-auto mb-6 pr-1">
-                <!-- Ranked Players -->
-            </div>
-
-            <button onclick="resetToHome()" class="esports-btn w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-lg rounded-xl shadow-glow-cyan">
-                <i class="fa-solid fa-house mr-2"></i><span data-i18n="btnReturnHome">返回主選單</span>
-            </button>
+            <button id="btn-next-question" class="btn-slate text-2xl font-bold py-4 px-12 rounded-lg mt-8 shadow-lg hover:text-yellow-400 transition-colors" style="display: none;">下一題 <i class="fas fa-arrow-right ml-2"></i></button>
         </div>
     </div>
+    
+    <!-- Winner Modal -->
+    <div id="winner-modal" style="display: none;" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50">
+        <i class="fas fa-trophy text-8xl text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" style="animation: crown-bounce 1s ease-in-out infinite;"></i>
+        <p class="text-6xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-10 tracking-widest">GAME OVER</p>
+        <div id="final-scores" class="bg-slate-900 border border-yellow-600/30 p-8 rounded-2xl shadow-[0_0_30px_rgba(251,191,36,0.15)] min-w-[300px]">
+            <!-- Top 3 scores injected here -->
+        </div>
+        <button onclick="window.location.reload()" class="mt-10 btn-slate py-3 px-8 text-xl rounded-lg font-bold hover:text-white">離開房間</button>
+    </div>
+</div>
+</div>
 
-    <!-- Footer -->
-    <footer class="w-full text-center py-2 text-[11px] text-slate-500">
-        &copy; 2026 有向數大師挑戰賽 Directed Numbers Master Challenge | Powered by Firebase
-    </footer>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue, get, update, remove, onDisconnect, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+const firebaseConfig = {
+    apiKey: "AIzaSyDgRC4M0WXpbwM6dV1nfPYIJJXdu_WWQ1c",
+    authDomain: "directed-number.firebaseapp.com",
+    databaseURL: "https://directed-number-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "directed-number",
+    storageBucket: "directed-number.appspot.com",
+    messagingSenderId: "722194576154",
+    appId: "1:722194576154:web:5af27c6c60160582e632a3",
+    measurementId: "G-Z0D8WF1G7D"
+};
 
-        // Firebase Setup
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'directed-number-game';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDgRC4M0WXpbwM6dV1nfPYIJJXdu_WWQ1c",
-            authDomain: "directed-number.firebaseapp.com",
-            projectId: "directed-number",
-            storageBucket: "directed-number.firebasestorage.app",
-            messagingSenderId: "722194576154",
-            appId: "1:722194576154:web:5af27c6c60160582e632a3"
-        };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+let localState = {
+    currentView: 'view-role-selection',
+    role: null, 
+    playerId: 'player_' + Math.random().toString(36).substr(2, 9),
+    playerName: '',
+    roomName: '',
+    isReady: false,
+    gameTimerInterval: null,
+    timerPaused: false, 
+    lastTimeLeft: null, 
+    roomUnsubscribe: null,
+    gameUnsubscribe: null,
+};
 
-        let currentUser = null;
-        let currentRole = null; // 'host' or 'player'
-        let currentRoomId = null;
-        let roomUnsubscribe = null;
-        let currentLanguage = 'zh'; // 'zh' or 'en'
-        let timerInterval = null;
-        let currentAnswerBuffer = '';
-        let roomData = null;
-        let audioMuted = false;
+const DOMElements = {
+    btnSelectHost: document.getElementById('btn-select-host'),
+    btnSelectPlayer: document.getElementById('btn-select-player'),
+    btnCreateRoom: document.getElementById('btn-create-room'),
+    btnJoinRoom: document.getElementById('btn-join-room'),
+    btnHostBack: document.getElementById('btn-host-back'),
+    btnPlayerBack: document.getElementById('btn-player-back'),
+    btnPlayerReady: document.getElementById('btn-player-ready'),
+    btnHostStart: document.getElementById('btn-host-start'),
+    btnSubmitAnswer: document.getElementById('btn-submit-answer'),
+    btnNextQuestion: document.getElementById('btn-next-question'),
+    hostRoomName: document.getElementById('host-room-name'),
+    hostRoomPassword: document.getElementById('host-room-password'),
+    hostGameMode: document.getElementById('host-game-mode'),
+    hostModeValue: document.getElementById('host-mode-value'),
+    hostGameTopic: document.getElementById('host-game-topic'),
+    hostDifficulty: document.getElementById('host-difficulty'),
+    playerRoomName: document.getElementById('player-room-name'),
+    playerRoomPassword: document.getElementById('player-room-password'),
+    playerName: document.getElementById('player-name'),
+    playerRoomError: document.getElementById('player-room-error'),
+    lobbyRoomName: document.getElementById('lobby-room-name'),
+    lobbyPlayerList: document.getElementById('lobby-player-list'),
+    lobbyPlayerControls: document.getElementById('lobby-player-controls'),
+    lobbyHostControls: document.getElementById('lobby-host-controls'),
+    gameHeader: document.getElementById('game-header'),
+    gameTimer: document.getElementById('game-timer'),
+    gameScoreTarget: document.getElementById('game-score-target'),
+    gameScoreValue: document.getElementById('game-score-value'),
+    questionText: document.getElementById('question-text'),
+    playerAnswerDisplay: document.getElementById('player-answer-display'),
+    numpadButtons: document.querySelectorAll('.numpad-btn'),
+    hostGameView: document.getElementById('host-game-view'),
+    playerGameView: document.getElementById('player-game-view'),
+    hostControlView: document.getElementById('host-control-view'),
+    hostStatusText: document.getElementById('host-status-text'),
+    hostPlayerScores: document.getElementById('host-player-scores'),
+    playerInGameName: document.getElementById('player-ingame-name'),
+    yellowCard: document.getElementById('yellow-card'),
+    redCardOverlay: document.getElementById('red-card-overlay'),
+    resultModal: document.getElementById('result-modal'),
+    resultStamp: document.getElementById('result-stamp'),
+    resultSubmitter: document.getElementById('result-submitter'),
+    resultSubmittedAnswer: document.getElementById('result-submitted-answer'),
+    resultCorrectAnswer: document.getElementById('result-correct-answer'),
+    resultSteps: document.getElementById('result-steps'),
+    winnerModal: document.getElementById('winner-modal'),
+    finalScores: document.getElementById('final-scores'),
+};
 
-        // Internationalization Dictionaries
-        const i18n = {
-            zh: {
-                title: "有向數大師挑戰賽",
-                selectRole: "請選擇身份",
-                selectRoleSub: "建立對戰房間或加入現有比賽",
-                roleHost: "我是主持 (Host)",
-                rolePlayer: "我是玩家 (Player)",
-                hostSetupTitle: "主持設定比賽房間",
-                playerJoinTitle: "玩家加入比賽",
-                btnBack: "返回",
-                lblRoomName: "房間名稱 *",
-                lblRoomPass: "房間密碼 (選填)",
-                lblMode: "比賽模式",
-                optTime3: "限時模式 - 3分鐘",
-                optTime5: "限時模式 - 5分鐘 (預設)",
-                optTime10: "限時模式 - 10分鐘",
-                optScore5: "目標分數 - 5分",
-                optScore10: "目標分數 - 10分",
-                optScore15: "目標分數 - 15分",
-                lblCategory: "比賽項目",
-                catAddSub: "有向數加減",
-                catMulDiv: "有向數乘除",
-                catMixed: "有向數四則運算",
-                lblDifficulty: "遊戲難度",
-                diffL1Desc: "(底分2分, +/-1分)",
-                diffL2Desc: "(底分2分, +/-2分)",
-                btnCreateRoom: "創建比賽房間",
-                lblPlayerName: "玩家姓名 / 暱稱 *",
-                btnJoinRoom: "進入對戰室",
-                lobbyPlayersList: "已加入玩家 (最多 10 人)",
-                btnStartGame: "開始遊戲",
-                btnStartGameWait: "開始遊戲 (等待玩家準備)",
-                hostStartTip: "需所有玩家按下「準備」後方可開始",
-                btnReady: "按下「準備」",
-                btnCancelReady: "取消準備",
-                gameModeLabel: "比賽模式",
-                lblCurrentQuestion: "當前搶答題目",
-                statusBuzzing: "玩家搶答中...",
-                redCardTitle: "連續 2 題答錯！",
-                redCardDesc: "紅牌懲罰：本回合暫停作答 1 次以示警惕。",
-                yourAnswer: "你的答案:",
-                keyClear: "清除",
-                btnSubmit: "提交答案",
-                hostControlNotice: "主持控制台: 有玩家提交後時間會暫停，請檢視解題步驟後點擊「下一題」。",
-                btnNextQuestion: "下一題",
-                leaderboardTitle: "即時排行榜",
-                submittedBy: "搶答玩家",
-                lblPlayerSubmission: "提交之答案:",
-                stepByStepTitle: "正確答案與詳細解題步驟:",
-                vicTitle: "比賽結束！錦標賽冠軍誕生！",
-                championLabel: "獲勝者 (CHAMPION)",
-                finalScoresTitle: "最終成績榜:",
-                btnReturnHome: "返回主選單",
-                soundOn: "音效: 開",
-                soundOff: "音效: 關",
-                correctStamp: "答對 CORRECT",
-                wrongStamp: "答錯 WRONG",
-                readyStatus: "已準備",
-                unreadyStatus: "未準備"
-            },
-            en: {
-                title: "Directed Numbers Master Challenge",
-                selectRole: "Select Your Role",
-                selectRoleSub: "Create a match room or join an existing game",
-                roleHost: "I am Host",
-                rolePlayer: "I am Player",
-                hostSetupTitle: "Host Room Settings",
-                playerJoinTitle: "Player Join Match",
-                btnBack: "Back",
-                lblRoomName: "Room Name *",
-                lblRoomPass: "Room Password (Optional)",
-                lblMode: "Game Mode",
-                optTime3: "Time Limit - 3 Mins",
-                optTime5: "Time Limit - 5 Mins (Default)",
-                optTime10: "Time Limit - 10 Mins",
-                optScore5: "Target Score - 5 Pts",
-                optScore10: "Target Score - 10 Pts",
-                optScore15: "Target Score - 15 Pts",
-                lblCategory: "Category",
-                catAddSub: "Addition & Subtraction",
-                catMulDiv: "Multiplication & Division",
-                catMixed: "Mixed Arithmetic",
-                lblDifficulty: "Difficulty Level",
-                diffL1Desc: "(Base 2 pts, +/-1 pt)",
-                diffL2Desc: "(Base 2 pts, +/-2 pts)",
-                btnCreateRoom: "Create Room",
-                lblPlayerName: "Player Name / Nickname *",
-                btnJoinRoom: "Join Room",
-                lobbyPlayersList: "Joined Players (Max 10)",
-                btnStartGame: "Start Game",
-                btnStartGameWait: "Start Game (Waiting for Ready)",
-                hostStartTip: "All players must click 'Ready' to start",
-                btnReady: "Click Ready",
-                btnCancelReady: "Cancel Ready",
-                gameModeLabel: "Game Mode",
-                lblCurrentQuestion: "Current Active Question",
-                statusBuzzing: "Players answering...",
-                redCardTitle: "2 Wrong Answers in a Row!",
-                redCardDesc: "Red Card Penalty: Suspended for 1 round.",
-                yourAnswer: "Your Answer:",
-                keyClear: "Clear",
-                btnSubmit: "Submit",
-                hostControlNotice: "Host Control: Timer pauses upon submission. Review steps and click 'Next Question'.",
-                btnNextQuestion: "Next Question",
-                leaderboardTitle: "Live Leaderboard",
-                submittedBy: "Submitted By",
-                lblPlayerSubmission: "Submitted Answer:",
-                stepByStepTitle: "Correct Answer & Step-by-Step Solution:",
-                vicTitle: "Game Over! Champion Declared!",
-                championLabel: "CHAMPION",
-                finalScoresTitle: "Final Scores:",
-                btnReturnHome: "Return to Main Menu",
-                soundOn: "Sound: ON",
-                soundOff: "Sound: OFF",
-                correctStamp: "CORRECT",
-                wrongStamp: "WRONG",
-                readyStatus: "READY",
-                unreadyStatus: "NOT READY"
-            }
-        };
+// SFX with intense esports flavor
+const sfx = {
+    click: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_bd27289b9b.mp3'),
+    submit: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c34b17.mp3'),
+    correct: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'), // Punchy correct
+    wrong: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_731c5123a7.mp3'),   // Error buzz
+    win: new Audio('https://cdn.pixabay.com/audio/2022/11/21/audio_a141b12bce.mp3'),
+    bgm: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3') // Intense BGM
+};
+sfx.bgm.loop = true;
+sfx.bgm.volume = 0.3;
 
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        let audioCtx = null;
+function playSfx(sound) {
+    if (sfx[sound]) {
+        sfx[sound].currentTime = 0;
+        sfx[sound].play().catch(e => console.log("SFX Blocked:", e));
+    }
+}
 
-        function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new AudioCtx();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            return audioCtx;
+function navigateTo(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    localState.currentView = viewId;
+}
+
+// --- Detailed Question Generator ---
+const getRand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const getNZRand = (min, max) => { let v=0; while(v===0) v=getRand(min,max); return v; };
+const fmtS = (n, showPlus=true) => n < 0 ? `(${n})` : (showPlus ? `(+${n})` : `${n}`);
+
+function generateQuestion(topic, difficulty) {
+    let question = '', answer = 0, stepsArr = [];
+    let n1, n2, n3, op1, op2;
+
+    if (topic === 'add_sub') {
+        if (difficulty === 'L1') {
+            n1 = getRand(-30, 30); n2 = getRand(-30, 30);
+            op1 = Math.random() > 0.5 ? '+' : '-';
+            question = `${fmtS(n1)} ${op1} ${fmtS(n2)}`;
+            answer = op1 === '+' ? n1 + n2 : n1 - n2;
+            stepsArr.push(`${question}`);
+            stepsArr.push(`= ${n1} ${op1 === '+' ? (n2>=0?'+':'-') : (n2>=0?'-':'+')} ${Math.abs(n2)}`);
+            stepsArr.push(`= ${answer}`);
+        } else { // L2
+            n1 = getRand(-40, 40); n2 = getRand(-40, 40); n3 = getRand(-40, 40);
+            op1 = Math.random() > 0.5 ? '+' : '-'; op2 = Math.random() > 0.5 ? '+' : '-';
+            question = `${fmtS(n1)} ${op1} ${fmtS(n2)} ${op2} ${fmtS(n3)}`;
+            let temp = op1 === '+' ? n1 + n2 : n1 - n2;
+            answer = op2 === '+' ? temp + n3 : temp - n3;
+            stepsArr.push(`${question}`);
+            let s1 = op1 === '+' ? (n2>=0?'+':'-') : (n2>=0?'-':'+');
+            let s2 = op2 === '+' ? (n3>=0?'+':'-') : (n3>=0?'-':'+');
+            stepsArr.push(`= ${n1} ${s1} ${Math.abs(n2)} ${s2} ${Math.abs(n3)}`);
+            stepsArr.push(`= ${temp} ${s2} ${Math.abs(n3)}`);
+            stepsArr.push(`= ${answer}`);
         }
-
-        function playSound(type) {
-            if (audioMuted) return;
-            try {
-                const ctx = getAudioContext();
-                const now = ctx.currentTime;
-                
-                if (type === 'click') {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.05);
-                } else if (type === 'submit') {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
-                    gain.gain.setValueAtTime(0.3, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.15);
-                } else if (type === 'correct') {
-                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.value = freq;
-                        gain.gain.setValueAtTime(0, now + idx * 0.08);
-                        gain.gain.linearRampToValueAtTime(0.3, now + idx * 0.08 + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(now + idx * 0.08);
-                        osc.stop(now + idx * 0.08 + 0.2);
-                    });
-                } else if (type === 'wrong') {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, now);
-                    osc.frequency.linearRampToValueAtTime(90, now + 0.3);
-                    gain.gain.setValueAtTime(0.4, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                } else if (type === 'victory') {
-                    const notes = [440, 554.37, 659.25, 880, 659.25, 880];
-                    notes.forEach((freq, idx) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'triangle';
-                        osc.frequency.value = freq;
-                        gain.gain.setValueAtTime(0, now + idx * 0.12);
-                        gain.gain.linearRampToValueAtTime(0.4, now + idx * 0.12 + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.3);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(now + idx * 0.12);
-                        osc.stop(now + idx * 0.12 + 0.3);
-                    });
-                }
-            } catch (e) {
-                console.error("Audio error", e);
+    } else if (topic === 'mul_div') {
+        if (difficulty === 'L1') {
+            n1 = getNZRand(-20, 20); n2 = getNZRand(-15, 15);
+            if (Math.random() > 0.5) { // Mul
+                question = `${fmtS(n1)} × ${fmtS(n2)}`;
+                answer = n1 * n2;
+            } else { // Div
+                answer = n1;
+                let prod = n1 * n2;
+                question = `${fmtS(prod, false)} ÷ ${fmtS(n2)}`;
+            }
+            stepsArr.push(`${question}`);
+            stepsArr.push(`= ${answer}`);
+        } else { // L2
+            n1 = getNZRand(-12, 12); n2 = getNZRand(-12, 12); n3 = getNZRand(-10, 10);
+            if (Math.random() > 0.5) { // A x B ÷ C (ensure exact division)
+                let prod = n1 * n2 * n3;
+                question = `${fmtS(prod, false)} ÷ ${fmtS(n2)} ÷ ${fmtS(n3)}`;
+                answer = n1;
+                stepsArr.push(`${question}`);
+                stepsArr.push(`= ${prod / n2} ÷ ${fmtS(n3)}`);
+                stepsArr.push(`= ${answer}`);
+            } else { // A ÷ B × C
+                let start = n1 * n2;
+                question = `${fmtS(start, false)} ÷ ${fmtS(n1)} × ${fmtS(n3)}`;
+                answer = n2 * n3;
+                stepsArr.push(`${question}`);
+                stepsArr.push(`= ${n2} × ${fmtS(n3)}`);
+                stepsArr.push(`= ${answer}`);
             }
         }
-
-        window.toggleAudio = function() {
-            audioMuted = !audioMuted;
-            const icon = document.getElementById('sound-icon');
-            const label = document.getElementById('sound-label');
-            if (audioMuted) {
-                icon.className = "fa-solid fa-volume-xmark text-slate-500";
-                label.textContent = i18n[currentLanguage].soundOff;
-            } else {
-                icon.className = "fa-solid fa-volume-high text-amber-400";
-                label.textContent = i18n[currentLanguage].soundOn;
-                playSound('click');
-            }
-        };
-
-        window.toggleLanguage = function() {
-            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
-            document.getElementById('lang-label').textContent = currentLanguage === 'zh' ? 'English' : '中文';
-            updateLocalizedTexts();
-            if (roomData) renderUI(roomData);
-        };
-
-        function updateLocalizedTexts() {
-            const dict = i18n[currentLanguage];
-            document.getElementById('title-text').textContent = dict.title;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (dict[key]) {
-                    el.textContent = dict[key];
-                }
-            });
-            document.getElementById('sound-label').textContent = audioMuted ? dict.soundOff : dict.soundOn;
+    } else if (topic === 'mixed') {
+        if (difficulty === 'L1') {
+            n1 = getRand(-20, 20); n2 = getNZRand(-10, 10); n3 = getNZRand(-10, 10);
+            op1 = Math.random() > 0.5 ? '+' : '-';
+            question = `${fmtS(n1, false)} ${op1} ${fmtS(n2)} × ${fmtS(n3)}`;
+            let mulRes = n2 * n3;
+            answer = op1 === '+' ? n1 + mulRes : n1 - mulRes;
+            stepsArr.push(`${question}`);
+            stepsArr.push(`= ${n1} ${op1} (${mulRes})`);
+            stepsArr.push(`= ${answer}`);
+        } else { // L2
+            n1 = getNZRand(-12, 12); n2 = getNZRand(-12, 12); 
+            n3 = getNZRand(-10, 10); let n4 = getNZRand(-10, 10);
+            op1 = Math.random() > 0.5 ? '+' : '-';
+            question = `${fmtS(n1)}${fmtS(n2)} ${op1} ${fmtS(n3)}${fmtS(n4)}`;
+            let p1 = n1 * n2, p2 = n3 * n4;
+            answer = op1 === '+' ? p1 + p2 : p1 - p2;
+            stepsArr.push(`${question}`);
+            stepsArr.push(`= (${p1}) ${op1} (${p2})`);
+            stepsArr.push(`= ${answer}`);
         }
+    }
+    return { questionText: question, correctAnswer: answer, steps: stepsArr.join('<br>') };
+}
 
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const userCred = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = userCred.user;
-                } else {
-                    const userCred = await signInAnonymously(auth);
-                    currentUser = userCred.user;
-                }
-            } catch (err) {
-                console.error("Auth Error:", err);
-            }
+function addEventListeners() {
+    DOMElements.btnSelectHost.addEventListener('click', () => { playSfx('click'); localState.role = 'host'; navigateTo('view-host-setup'); });
+    DOMElements.btnSelectPlayer.addEventListener('click', () => { playSfx('click'); localState.role = 'player'; navigateTo('view-player-join'); });
+    DOMElements.btnHostBack.addEventListener('click', () => { playSfx('click'); navigateTo('view-role-selection'); });
+    DOMElements.btnPlayerBack.addEventListener('click', () => { playSfx('click'); navigateTo('view-role-selection'); });
+    DOMElements.btnCreateRoom.addEventListener('click', handleCreateRoom);
+    DOMElements.btnJoinRoom.addEventListener('click', handleJoinRoom);
+    DOMElements.btnPlayerReady.addEventListener('click', handlePlayerReady);
+    DOMElements.btnHostStart.addEventListener('click', handleHostStartGame);
+    DOMElements.numpadButtons.forEach(btn => btn.addEventListener('click', handleNumpadClick));
+    DOMElements.btnSubmitAnswer.addEventListener('click', handleSubmitAnswer);
+    DOMElements.btnNextQuestion.addEventListener('click', handleNextQuestion);
+    DOMElements.hostGameMode.addEventListener('change', updateHostModeOptions);
+}
+
+async function handleCreateRoom() {
+    playSfx('click');
+    const roomName = DOMElements.hostRoomName.value.trim();
+    if (!roomName) { alert('請輸入房間名稱'); return; }
+    const roomRef = ref(db, 'rooms/' + roomName);
+    const snapshot = await get(roomRef);
+    if (snapshot.exists() && !confirm('該房間已存在。要覆蓋它嗎？')) return;
+    localState.roomName = roomName;
+    localState.playerName = 'HOST';
+    await set(roomRef, {
+        roomName, password: DOMElements.hostRoomPassword.value.trim(), status: 'waiting',
+        settings: {
+            mode: DOMElements.hostGameMode.value, modeValue: parseInt(DOMElements.hostModeValue.value),
+            topic: DOMElements.hostGameTopic.value, difficulty: DOMElements.hostDifficulty.value,
+        },
+        players: { [localState.playerId]: { name: 'HOST', score: 0, isReady: true, isHost: true } },
+        timerState: { paused: true, lastTimeLeft: null, gameStartTime: null, totalPauseDuration: 0 } 
+    });
+    onDisconnect(roomRef).remove();
+    joinLobby(roomName);
+}
+
+async function handleJoinRoom() {
+    playSfx('click');
+    DOMElements.playerRoomError.style.display = 'none';
+    const roomName = DOMElements.playerRoomName.value.trim();
+    const playerName = DOMElements.playerName.value.trim();
+    if (!playerName || !roomName) { alert('請填寫完整資料！'); return; }
+    const roomRef = ref(db, 'rooms/' + roomName);
+    const snapshot = await get(roomRef);
+    if (!snapshot.exists()) { DOMElements.playerRoomError.style.display = 'block'; return; }
+    const roomData = snapshot.val();
+    if (roomData.password && roomData.password !== DOMElements.playerRoomPassword.value.trim()) { alert('密碼錯誤！'); return; }
+    if (roomData.status !== 'waiting') { alert('遊戲已開始，無法加入！'); return; }
+    
+    localState.roomName = roomName;
+    localState.playerName = playerName;
+    // REQ 2: 所有玩家底分為 2 分
+    const playerRef = ref(db, `rooms/${roomName}/players/${localState.playerId}`);
+    await set(playerRef, { name: playerName, score: 2, isReady: false, wrongCount: 0, skipRound: false });
+    onDisconnect(playerRef).remove();
+    joinLobby(roomName);
+}
+
+function joinLobby(roomName) {
+    navigateTo('view-lobby');
+    DOMElements.lobbyRoomName.textContent = roomName;
+    DOMElements.lobbyPlayerControls.style.display = localState.role === 'host' ? 'none' : 'block';
+    DOMElements.lobbyHostControls.style.display = localState.role === 'host' ? 'block' : 'none';
+    if (localState.roomUnsubscribe) localState.roomUnsubscribe();
+    localState.roomUnsubscribe = onValue(ref(db, 'rooms/' + roomName), (snapshot) => {
+        const roomData = snapshot.val();
+        if (!roomData) return window.location.reload();
+        updateLobbyPlayerList(roomData.players);
+        if (localState.role === 'host') {
+            const players = Object.values(roomData.players || {}).filter(p => !p.isHost);
+            DOMElements.btnHostStart.disabled = !(players.length > 0 && players.every(p => p.isReady));
         }
-        initAuth();
-
-        // View Navigation Helper
-        window.showView = function(viewId) {
-            playSound('click');
-            const views = ['view-role-select', 'view-host-setup', 'view-player-setup', 'view-lobby', 'view-arena'];
-            views.forEach(v => {
-                const el = document.getElementById(v);
-                if (el) {
-                    if (v === viewId) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
-                }
-            });
-        };
-
-        window.selectRole = function(role) {
-            currentRole = role;
-            if (role === 'host') {
-                showView('view-host-setup');
-            } else {
-                showView('view-player-setup');
-            }
-        };
-
-        function generateQuestion(category, difficulty) {
-            // Random Helper Functions
-            const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-            const randNonZero = (min, max) => {
-                let v = 0;
-                while (v === 0) v = randInt(min, max);
-                return v;
-            };
-            const formatTerm = (n) => n >= 0 ? `(+${n})` : `(${n})`;
-
-            let exprStr = "";
-            let answerVal = 0;
-            let steps = [];
-
-            if (category === 'add_sub') {
-                if (difficulty === 'L1') {
-                    // Two terms: (+a) + (-b), (+a) - (+b), etc.
-                    const a = randNonZero(-30, 30);
-                    const b = randNonZero(-30, 30);
-                    const op = Math.random() > 0.5 ? '+' : '-';
-                    exprStr = `${formatTerm(a)} ${op} ${formatTerm(b)}`;
-                    answerVal = op === '+' ? (a + b) : (a - b);
-
-                    steps.push(`1) ${i18n[currentLanguage].lblCurrentQuestion}: \\(${exprStr}\\)`);
-                    const signOp = op === '+' ? b : -b;
-                    steps.push(`2) = ${a} ${signOp >= 0 ? '+ ' + signOp : '- ' + Math.abs(signOp)}`);
-                    steps.push(`3) = ${answerVal}`);
-                } else {
-                    // L2: 3 terms or decimals
-                    const useDecimals = Math.random() > 0.6;
-                    if (useDecimals) {
-                        const a = parseFloat((randNonZero(-20, 20) + (randInt(1, 9) / 10)).toFixed(1));
-                        const b = randNonZero(-20, 20);
-                        const c = randNonZero(-20, 20);
-                        exprStr = `(${a > 0 ? '+' + a : a}) + (${b > 0 ? '+' + b : b}) - (${c > 0 ? '+' + c : c})`;
-                        answerVal = parseFloat((a + b - c).toFixed(1));
-
-                        steps.push(`1) \\(${exprStr}\\)`);
-                        steps.push(`2) = ${a} ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} ${-c >= 0 ? '+ ' + (-c) : '- ' + Math.abs(-c)}`);
-                        steps.push(`3) = ${answerVal}`);
-                    } else {
-                        const a = randNonZero(-15, 15);
-                        const b = randNonZero(-15, 15);
-                        const c = randNonZero(-15, 15);
-                        const op1 = Math.random() > 0.5 ? '+' : '-';
-                        const op2 = Math.random() > 0.5 ? '+' : '-';
-                        exprStr = `${formatTerm(a)} ${op1} ${formatTerm(b)} ${op2} ${formatTerm(c)}`;
-                        let step1 = op1 === '+' ? (a + b) : (a - b);
-                        answerVal = op2 === '+' ? (step1 + c) : (step1 - c);
-
-                        steps.push(`1) \\(${exprStr}\\)`);
-                        steps.push(`2) = ${a} ${op1 === '+' ? (b>=0?'+'+b:b) : (b>=0?'-'+b:'+'+Math.abs(b))} ${op2 === '+' ? (c>=0?'+'+c:c) : (c>=0?'-'+c:'+'+Math.abs(c))}`);
-                        steps.push(`3) = ${answerVal}`);
-                    }
-                }
-            } else if (category === 'mul_div') {
-                if (difficulty === 'L1') {
-                    const isMul = Math.random() > 0.5;
-                    if (isMul) {
-                        const a = randNonZero(-25, 25);
-                        const b = randNonZero(-12, 12);
-                        exprStr = `${formatTerm(a)} \\times ${formatTerm(b)}`;
-                        answerVal = a * b;
-                        steps.push(`1) \\(${exprStr}\\)`);
-                        steps.push(`2) ${i18n[currentLanguage].lblCategory}: (${a >= 0 ? '+' : ''}${a}) \\times (${b >= 0 ? '+' : ''}${b})`);
-                        steps.push(`3) = ${answerVal}`);
-                    } else {
-                        const b = randNonZero(-15, 15);
-                        answerVal = randNonZero(-20, 20);
-                        const a = b * answerVal;
-                        // Use fraction style or standard division symbol
-                        if (Math.random() > 0.5) {
-                            exprStr = `\\frac{${a >= 0 ? '+' + a : a}}{${b >= 0 ? '+' + b : b}}`;
-                        } else {
-                            exprStr = `${formatTerm(a)} \\div ${formatTerm(b)}`;
-                        }
-                        steps.push(`1) \\(${exprStr}\\)`);
-                        steps.push(`2) = ${answerVal}`);
-                    }
-                } else {
-                    // L2: 3 terms chain multiplication or division
-                    const b = randNonZero(-10, 10);
-                    const c = randNonZero(-8, 8);
-                    answerVal = randNonZero(-15, 15);
-                    const a = b * c * answerVal;
-                    exprStr = `(${a >= 0 ? '+' + a : a}) \\div (${b >= 0 ? '+' + b : b}) \\div (${c >= 0 ? '+' + c : c})`;
-                    const intermediate = a / b;
-                    steps.push(`1) \\(${exprStr}\\)`);
-                    steps.push(`2) = (${intermediate >= 0 ? '+' + intermediate : intermediate}) \\div (${c >= 0 ? '+' + c : c})`);
-                    steps.push(`3) = ${answerVal}`);
-                }
-            } else {
-                // Mixed arithmetic (四則運算)
-                if (difficulty === 'L1') {
-                    // e.g. a(b) + (c) or a + b(c)
-                    const a = randNonZero(-10, 10);
-                    const b = randNonZero(-10, 10);
-                    const c = randNonZero(-15, 15);
-                    exprStr = `${a}${formatTerm(b)} + ${formatTerm(c)}`;
-                    const prod = a * b;
-                    answerVal = prod + c;
-
-                    steps.push(`1) \\(${exprStr}\\)`);
-                    steps.push(`2) = (${prod >= 0 ? '+' + prod : prod}) + ${formatTerm(c)}`);
-                    steps.push(`3) = ${answerVal}`);
-                } else {
-                    // L2: Brackets or complex fraction e.g., (a + b(c)) / d
-                    const c = randNonZero(-6, 6);
-                    const d = randNonZero(-6, 6);
-                    const cd = c * d;
-                    const a = randNonZero(-15, 15);
-                    answerVal = randNonZero(-10, 10);
-                    const denom = randNonZero(-5, 5);
-                    const num = answerVal * denom;
-                    const b = num - cd;
-
-                    exprStr = `\\frac{${b} + ${c}(${d})}{${denom}}`;
-                    steps.push(`1) \\(${exprStr}\\)`);
-                    steps.push(`2) = \\frac{${b} + (${cd >= 0 ? '+' + cd : cd})}{${denom}}`);
-                    steps.push(`3) = \\frac{${num}}{${denom}}`);
-                    steps.push(`4) = ${answerVal}`);
-                }
-            }
-
-            return {
-                exprStr,
-                answerVal: String(answerVal),
-                steps
-            };
+        if (roomData.status === 'playing' && localState.currentView !== 'view-game') {
+            localState.roomUnsubscribe();
+            startGame(roomData);
         }
+    });
+}
 
-        window.handleCreateRoom = async function(e) {
-            e.preventDefault();
-            playSound('click');
-            if (!currentUser) await initAuth();
+function updateLobbyPlayerList(players) {
+    DOMElements.lobbyPlayerList.innerHTML = '';
+    Object.values(players || {}).filter(p => !p.isHost).forEach(p => {
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-lg text-center shadow-lg ${p.isReady ? 'bg-green-800/80 border-2 border-green-400' : 'bg-slate-700/80'}`;
+        card.innerHTML = `<p class="text-lg font-bold truncate">${p.name}</p><p class="text-sm font-bold ${p.isReady ? 'text-green-300' : 'text-slate-400'}">${p.isReady ? '已準備' : '等待中...'}</p>`;
+        DOMElements.lobbyPlayerList.appendChild(card);
+    });
+}
 
-            const roomName = document.getElementById('host-room-name').value.trim();
-            const password = document.getElementById('host-room-pass').value.trim();
-            const mode = document.getElementById('host-game-mode').value;
-            const category = document.getElementById('host-category').value;
-            const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+function handlePlayerReady() {
+    playSfx('click');
+    localState.isReady = !localState.isReady;
+    DOMElements.btnPlayerReady.textContent = localState.isReady ? '取消準備' : '準備 (Ready)';
+    DOMElements.btnPlayerReady.classList.toggle('btn-gold');
+    DOMElements.btnPlayerReady.classList.toggle('btn-slate');
+    set(ref(db, `rooms/${localState.roomName}/players/${localState.playerId}/isReady`), localState.isReady);
+}
 
-            if (!roomName) return;
+async function handleHostStartGame() {
+    playSfx('submit');
+    await update(ref(db, `rooms/${localState.roomName}`), { status: 'playing', "timerState/gameStartTime": serverTimestamp(), "timerState/paused": false });
+}
 
-            currentRoomId = roomName.toLowerCase().replace(/[^a-z0-0_]/g, '_');
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-
-            let timeLimit = 300; // 5 mins default
-            if (mode === 'time_3') timeLimit = 180;
-            if (mode === 'time_10') timeLimit = 600;
-
-            let targetScore = 0;
-            if (mode === 'target_5') targetScore = 5;
-            if (mode === 'target_10') targetScore = 10;
-            if (mode === 'target_15') targetScore = 15;
-
-            const initialQuestion = generateQuestion(category, difficulty);
-
-            const roomDataInitial = {
-                roomId: currentRoomId,
-                roomName: roomName,
-                password: password,
-                hostUid: currentUser.uid,
-                gameMode: mode,
-                category: category,
-                difficulty: difficulty,
-                timeLimit: timeLimit,
-                timeRemaining: timeLimit,
-                targetScore: targetScore,
-                status: 'lobby', // 'lobby', 'playing', 'review', 'ended'
-                currentQuestion: initialQuestion,
-                timerRunning: false,
-                submittedPlayer: null,
-                submittedAnswer: null,
-                isCorrect: null,
-                players: {},
-                createdAt: Date.now()
-            };
-
-            await setDoc(roomRef, roomDataInitial);
-            subscribeToRoom(currentRoomId);
-            showView('view-lobby');
-        };
-
-        window.handleJoinRoom = async function(e) {
-            e.preventDefault();
-            playSound('click');
-            if (!currentUser) await initAuth();
-
-            const playerName = document.getElementById('player-name').value.trim();
-            const roomName = document.getElementById('player-room-name').value.trim();
-            const password = document.getElementById('player-room-pass').value.trim();
-
-            if (!playerName || !roomName) return;
-
-            const targetRoomId = roomName.toLowerCase().replace(/[^a-z0-0_]/g, '_');
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', targetRoomId);
-
-            try {
-                const docSnap = await getDoc(roomRef);
-                if (!docSnap.exists()) {
-                    alert(currentLanguage === 'zh' ? "找不到該房間！" : "Room not found!");
-                    return;
-                }
-
-                const data = docSnap.data();
-                if (data.password && data.password !== password) {
-                    alert(currentLanguage === 'zh' ? "密碼錯誤！" : "Incorrect password!");
-                    return;
-                }
-
-                const playerKeys = Object.keys(data.players || {});
-                if (playerKeys.length >= 10 && !data.players[currentUser.uid]) {
-                    alert(currentLanguage === 'zh' ? "房間已滿 10 人！" : "Room is full (Max 10 players)!");
-                    return;
-                }
-
-                // Register player in room
-                const updatedPlayers = { ...data.players };
-                updatedPlayers[currentUser.uid] = {
-                    uid: currentUser.uid,
-                    name: playerName,
-                    score: 2, // Base score of 2 points
-                    ready: false,
-                    yellowCards: 0,
-                    frozenRound: false
-                };
-
-                await updateDoc(roomRef, { players: updatedPlayers });
-                currentRoomId = targetRoomId;
-                subscribeToRoom(currentRoomId);
-                showView('view-lobby');
-            } catch (err) {
-                console.error("Error joining room:", err);
-                alert("Error joining room: " + err.message);
-            }
-        };
-
-        function subscribeToRoom(roomId) {
-            if (roomUnsubscribe) roomUnsubscribe();
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
-            roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
-                if (!snapshot.exists()) return;
-                roomData = snapshot.data();
-                renderUI(roomData);
-            }, (err) => {
-                console.error("Room sync error:", err);
-            });
+function startGame(initialRoomData) {
+    navigateTo('view-game');
+    sfx.bgm.play().catch(e => console.log("BGM blocked:", e));
+    setupGameUI(initialRoomData.settings);
+    if (localState.role === 'host' && !initialRoomData.current_question) hostGenerateNewQuestion(initialRoomData.settings);
+    
+    if (localState.gameUnsubscribe) localState.gameUnsubscribe();
+    localState.gameUnsubscribe = onValue(ref(db, 'rooms/' + localState.roomName), (snapshot) => {
+        const roomData = snapshot.val();
+        if (!roomData || roomData.status === 'finished') { 
+            if (localState.gameTimerInterval) clearInterval(localState.gameTimerInterval);
+            sfx.bgm.pause();
+            if(roomData) showWinner(roomData);
+            return; 
         }
+        updatePlayerScores(roomData.players);
+        updateTimer(roomData);
+        const qData = roomData.current_question;
+        if (qData && qData.questionText && DOMElements.questionText.textContent !== qData.questionText) {
+            DOMElements.questionText.textContent = qData.questionText;
+        }
+        if (qData && qData.submitted_by) handleAnswerSubmitted(roomData);
+        else resetForNewQuestion(roomData);
+        
+        if (localState.role === 'host' && roomData.settings.mode === 'score') {
+            const winner = Object.values(roomData.players).find(p => !p.isHost && p.score >= roomData.settings.modeValue);
+            if (winner) update(ref(db, `rooms/${localState.roomName}`), { status: 'finished' });
+        }
+    });
+}
 
-        function renderUI(data) {
-            const dict = i18n[currentLanguage];
+function setupGameUI(settings) {
+    DOMElements.gameHeader.classList.remove('hidden');
+    const isHost = localState.role === 'host';
+    DOMElements.hostGameView.style.display = isHost ? 'block' : 'none';
+    DOMElements.hostControlView.style.display = isHost ? 'block' : 'none';
+    DOMElements.playerGameView.style.display = isHost ? 'none' : 'block';
+    
+    if (settings.mode === 'score') {
+        DOMElements.gameTimer.style.display = 'none';
+        DOMElements.gameScoreTarget.style.display = 'block';
+        DOMElements.gameScoreValue.textContent = settings.modeValue;
+    } else { 
+        DOMElements.gameScoreTarget.style.display = 'none';
+        DOMElements.gameTimer.style.display = 'block';
+    }
+}
 
-            // Render Lobby
-            if (data.status === 'lobby') {
-                if (document.getElementById('view-lobby').classList.contains('hidden')) {
-                    showView('view-lobby');
-                }
+function hostGenerateNewQuestion(settings) {
+    set(ref(db, `rooms/${localState.roomName}/current_question`), generateQuestion(settings.topic, settings.difficulty));
+}
 
-                document.getElementById('lobby-room-title').textContent = data.roomName;
-                document.getElementById('lobby-badge').textContent = `ROOM: ${data.roomName}`;
+function updatePlayerScores(players) {
+    if (localState.role !== 'host' || !DOMElements.hostPlayerScores) return;
+    DOMElements.hostPlayerScores.innerHTML = '';
+    Object.values(players||{}).filter(p => !p.isHost).sort((a,b) => b.score - a.score).forEach(p => {
+        let cards = p.skipRound ? '🟥' : (p.wrongCount === 1 ? '🟨' : '');
+        DOMElements.hostPlayerScores.innerHTML += `
+            <div class="flex justify-between items-center bg-slate-800 p-3 rounded-md mb-2 border border-slate-700">
+                <span class="font-bold text-lg">${p.name}</span>
+                <div class="flex items-center gap-2"><span class="text-xl drop-shadow-md">${cards}</span><span class="font-orbitron text-2xl text-yellow-400 font-bold">${p.score}</span></div>
+            </div>`;
+    });
+}
 
-                let modeLabel = data.gameMode.includes('time') ? dict.optTime5 : dict.optScore10;
-                let catLabel = dict.catAddSub;
-                if (data.category === 'mul_div') catLabel = dict.catMulDiv;
-                if (data.category === 'mixed') catLabel = dict.catMixed;
+function updateTimer(roomData) {
+    if (roomData.settings.mode !== 'time' || !roomData.timerState) return;
+    if (localState.gameTimerInterval) clearInterval(localState.gameTimerInterval);
+    const ts = roomData.timerState;
+    const updateD = (tl) => {
+        const m = Math.floor((tl / 1000 / 60) % 60), s = Math.floor((tl / 1000) % 60);
+        DOMElements.gameTimer.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+    if (ts.paused) return updateD(ts.lastTimeLeft || roomData.settings.modeValue * 1000);
+    if (!ts.gameStartTime) return;
+    localState.gameTimerInterval = setInterval(() => {
+        const tl = Math.max(0, roomData.settings.modeValue * 1000 - (Date.now() - ts.gameStartTime - (ts.totalPauseDuration || 0)));
+        localState.lastTimeLeft = tl;
+        updateD(tl);
+        if (tl <= 0) {
+            clearInterval(localState.gameTimerInterval);
+            if (localState.role === 'host') update(ref(db, `rooms/${localState.roomName}`), { status: 'finished' });
+        }
+    }, 500);
+}
 
-                document.getElementById('lobby-config-info').innerHTML = `
-                    <span><i class="fa-solid fa-gamepad text-amber-400"></i> ${catLabel} (${data.difficulty})</span>
-                    <span><i class="fa-solid fa-clock text-cyan-400"></i> ${modeLabel}</span>
-                `;
-
-                const playersList = Object.values(data.players || {});
-                document.getElementById('lobby-count').textContent = `${playersList.length} / 10`;
-
-                // Render player lobby cards
-                const grid = document.getElementById('lobby-players-grid');
-                grid.innerHTML = playersList.map(p => `
-                    <div class="bg-slate-900 border ${p.ready ? 'border-emerald-500 shadow-glow-cyan' : 'border-slate-800'} p-3 rounded-xl flex flex-col items-center justify-center text-center transition-all">
-                        <div class="w-10 h-10 rounded-full ${p.ready ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'} flex items-center justify-center mb-1 text-lg">
-                            <i class="fa-solid ${p.ready ? 'fa-check' : 'fa-user'}"></i>
-                        </div>
-                        <span class="text-xs font-bold text-white truncate max-w-[80px]">${p.name}</span>
-                        <span class="text-[10px] font-bold ${p.ready ? 'text-emerald-400' : 'text-slate-500'} mt-1">
-                            ${p.ready ? dict.readyStatus : dict.unreadyStatus}
-                        </span>
-                    </div>
-                `).join('');
-
-                // Toggle host/player buttons
-                if (currentRole === 'host') {
-                    document.getElementById('host-lobby-actions').classList.remove('hidden');
-                    document.getElementById('player-lobby-actions').classList.add('hidden');
-
-                    const allReady = playersList.length > 0 && playersList.every(p => p.ready);
-                    const btnStart = document.getElementById('btn-start-game');
-                    if (allReady) {
-                        btnStart.disabled = false;
-                        btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
-                        btnStart.querySelector('span').textContent = dict.btnStartGame;
-                    } else {
-                        btnStart.disabled = true;
-                        btnStart.classList.add('opacity-50', 'cursor-not-allowed');
-                        btnStart.querySelector('span').textContent = dict.btnStartGameWait;
-                    }
-                } else {
-                    document.getElementById('host-lobby-actions').classList.add('hidden');
-                    document.getElementById('player-lobby-actions').classList.remove('hidden');
-
-                    const me = data.players[currentUser?.uid];
-                    const readyBtnText = document.getElementById('ready-btn-text');
-                    if (me && me.ready) {
-                        readyBtnText.textContent = dict.btnCancelReady;
-                    } else {
-                        readyBtnText.textContent = dict.btnReady;
-                    }
-                }
-            }
-
-            // Render Gameplay Arena
-            if (data.status === 'playing' || data.status === 'review') {
-                if (document.getElementById('view-arena').classList.contains('hidden')) {
-                    showView('view-arena');
-                }
-
-                // Tags & Timer
-                let catLabel = dict.catAddSub;
-                if (data.category === 'mul_div') catLabel = dict.catMulDiv;
-                if (data.category === 'mixed') catLabel = dict.catMixed;
-                document.getElementById('arena-category-tag').textContent = catLabel;
-                document.getElementById('arena-diff-tag').textContent = data.difficulty;
-
-                const mins = Math.floor(data.timeRemaining / 60);
-                const secs = data.timeRemaining % 60;
-                document.getElementById('arena-timer').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-
-                if (data.gameMode.includes('target')) {
-                    document.getElementById('arena-mode-desc').textContent = `${dict.gameModeLabel}: ${data.targetScore} Pts`;
-                } else {
-                    document.getElementById('arena-mode-desc').textContent = `${dict.gameModeLabel}: ${Math.floor(data.timeLimit / 60)} Mins`;
-                }
-
-                // Render Question
-                const questionDisplay = document.getElementById('question-display');
-                if (questionDisplay.dataset.expr !== data.currentQuestion.exprStr) {
-                    questionDisplay.dataset.expr = data.currentQuestion.exprStr;
-                    questionDisplay.innerHTML = `\\(${data.currentQuestion.exprStr}\\)`;
-                    if (window.MathJax) MathJax.typesetPromise([questionDisplay]);
-                }
-
-                // Toggle Host vs Player arena controls
-                if (currentRole === 'host') {
-                    document.getElementById('player-controls-container').classList.add('hidden');
-                    document.getElementById('host-controls-container').classList.remove('hidden');
-                } else {
-                    document.getElementById('player-controls-container').classList.remove('hidden');
-                    document.getElementById('host-controls-container').classList.add('hidden');
-
-                    // Check if player is frozen
-                    const me = data.players[currentUser?.uid];
-                    const redOverlay = document.getElementById('red-card-overlay');
-                    if (me && me.frozenRound) {
-                        redOverlay.classList.remove('hidden');
-                    } else {
-                        redOverlay.classList.add('hidden');
-                    }
-                }
-
-                // Render Leaderboard
-                const sortedPlayers = Object.values(data.players || {}).sort((a, b) => b.score - a.score);
-                const lb = document.getElementById('arena-leaderboard');
-                lb.innerHTML = sortedPlayers.map((p, idx) => {
-                    const isLeader = idx === 0;
-                    return `
-                        <div class="p-3 rounded-xl bg-slate-900 border ${isLeader ? 'border-amber-400/80 shadow-glow-gold' : 'border-slate-800'} flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                ${isLeader ? '<i class="fa-solid fa-crown text-amber-400 text-sm"></i>' : `<span class="text-xs font-mono text-slate-500 w-4">${idx+1}</span>`}
-                                <div>
-                                    <span class="text-xs font-bold text-white block truncate max-w-[100px]">${p.name}</span>
-                                    <!-- Cards Status -->
-                                    <div class="flex items-center gap-1 mt-0.5">
-                                        ${p.yellowCards === 1 ? '<span class="inline-block w-2.5 h-3 bg-yellow-400 rounded-sm" title="Yellow Card"></span>' : ''}
-                                        ${p.frozenRound ? '<span class="inline-block w-2.5 h-3 bg-red-600 rounded-sm" title="Red Card"></span>' : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="text-lg font-black font-mono ${isLeader ? 'text-amber-400' : 'text-cyan-400'}">${p.score} <span class="text-[10px] text-slate-400">pts</span></span>
-                        </div>
-                    `;
-                }).join('');
-
-                // Check for Synchronous Review Modal State
-                if (data.status === 'review') {
-                    showReviewModal(data);
-                } else {
-                    document.getElementById('modal-review').classList.add('hidden');
-                }
-            }
-
-            // Render Victory / Ended Modal State
-            if (data.status === 'ended') {
-                showVictoryModal(data);
+async function handleAnswerSubmitted(roomData) {
+    DOMElements.btnSubmitAnswer.disabled = true;
+    DOMElements.btnSubmitAnswer.classList.remove('pulse');
+    const q = roomData.current_question, sub = roomData.players[q.submitted_by];
+    
+    if (localState.role === 'host' && typeof q.is_correct === 'undefined') {
+        const isCorrect = parseInt(q.submitted_answer) === q.correctAnswer;
+        // REQ 2: 計分系統 (L1: ±1, L2: ±2)
+        const diffPts = roomData.settings.difficulty === 'L1' ? 1 : 2;
+        const newScore = sub.score + (isCorrect ? diffPts : -diffPts);
+        const newWrong = isCorrect ? 0 : (sub.wrongCount || 0) + 1;
+        const shouldSkip = newWrong >= 2;
+        
+        let up = {};
+        up[`/current_question/is_correct`] = isCorrect;
+        up[`/players/${q.submitted_by}/score`] = newScore;
+        up[`/players/${q.submitted_by}/wrongCount`] = shouldSkip ? 0 : newWrong;
+        up[`/players/${q.submitted_by}/skipRound`] = shouldSkip;
+        if (roomData.settings.mode === 'time') {
+            up[`/timerState/paused`] = true; up[`/timerState/lastTimeLeft`] = localState.lastTimeLeft; up[`/timerState/pauseStartTime`] = serverTimestamp();
+        }
+        await update(ref(db, `rooms/${localState.roomName}`), up);
+    } else if (typeof q.is_correct !== 'undefined') {
+        if (DOMElements.resultModal.style.display === 'none') {
+            DOMElements.resultModal.style.display = 'flex';
+            DOMElements.resultSubmitter.textContent = sub.name;
+            DOMElements.resultSubmittedAnswer.textContent = q.submitted_answer;
+            DOMElements.resultCorrectAnswer.textContent = q.correctAnswer;
+            DOMElements.resultSteps.innerHTML = q.steps;
+            DOMElements.btnNextQuestion.style.display = localState.role === 'host' ? 'inline-block' : 'none';
+            const stamp = DOMElements.resultStamp;
+            if (!stamp.classList.contains('show')) {
+                playSfx(q.is_correct ? 'correct' : 'wrong');
+                stamp.textContent = q.is_correct ? 'CORRECT' : 'WRONG';
+                stamp.className = `stamp ${q.is_correct ? 'stamp-correct' : 'stamp-wrong'}`;
+                setTimeout(() => stamp.classList.add('show'), 50);
             }
         }
+    }
+}
 
-        // Host Ready Action -> Start Game
-        window.hostStartGame = async function() {
-            playSound('click');
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-            await updateDoc(roomRef, {
-                status: 'playing',
-                timerRunning: true
-            });
-            startHostTimer();
-        };
-
-        // Player Ready Toggle
-        window.playerToggleReady = async function() {
-            playSound('click');
-            const me = roomData.players[currentUser.uid];
-            const updatedPlayers = { ...roomData.players };
-            updatedPlayers[currentUser.uid].ready = !me.ready;
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-            await updateDoc(roomRef, { players: updatedPlayers });
-        };
-
-        // Host Timer Counter Logic
-        function startHostTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(async () => {
-                if (currentRole !== 'host' || !roomData) return;
-                if (roomData.status === 'playing' && roomData.timerRunning) {
-                    let newTime = roomData.timeRemaining - 1;
-                    if (newTime <= 0) {
-                        newTime = 0;
-                        clearInterval(timerInterval);
-                        // Trigger Victory / End Game
-                        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                        await updateDoc(roomRef, {
-                            timeRemaining: 0,
-                            timerRunning: false,
-                            status: 'ended'
-                        });
-                    } else {
-                        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                        await updateDoc(roomRef, { timeRemaining: newTime });
-                    }
-                }
-            }, 1000);
-        }
-
-        // Keypad Interactions
-        window.keypadInput = function(char) {
-            playSound('click');
-            if (currentAnswerBuffer.length < 10) {
-                currentAnswerBuffer += char;
-                document.getElementById('player-answer-input').textContent = currentAnswerBuffer;
-            }
-        };
-
-        window.keypadClear = function() {
-            playSound('click');
-            currentAnswerBuffer = '';
-            document.getElementById('player-answer-input').textContent = '';
-        };
-
-        window.submitAnswer = async function() {
-            if (!currentAnswerBuffer.trim()) return;
-            const me = roomData.players[currentUser.uid];
-            if (me.frozenRound) return; // Frozen by red card
-
-            playSound('submit');
-            const playerAnswer = currentAnswerBuffer.trim();
-            const correctAnswer = roomData.currentQuestion.answerVal;
-            const isCorrect = (playerAnswer === correctAnswer);
-
-            const scoreDelta = roomData.difficulty === 'L1' ? 1 : 2;
-            const updatedPlayers = { ...roomData.players };
-            let pData = updatedPlayers[currentUser.uid];
-
-            if (isCorrect) {
-                pData.score += scoreDelta;
-                pData.yellowCards = 0; // Reset fouls
-            } else {
-                pData.score = Math.max(0, pData.score - scoreDelta);
-                pData.yellowCards += 1;
-                if (pData.yellowCards >= 2) {
-                    pData.frozenRound = true; // Red card penalty
-                }
-            }
-
-            // Check if player reached target score in target score mode
-            let gameShouldEnd = false;
-            if (roomData.gameMode.includes('target') && pData.score >= roomData.targetScore) {
-                gameShouldEnd = true;
-            }
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-            currentAnswerBuffer = '';
-            document.getElementById('player-answer-input').textContent = '';
-
-            await updateDoc(roomRef, {
-                players: updatedPlayers,
-                submittedPlayer: pData.name,
-                submittedAnswer: playerAnswer,
-                isCorrect: isCorrect,
-                timerRunning: false,
-                status: gameShouldEnd ? 'ended' : 'review'
-            });
-        };
-
-        // Host Next Question Action
-        window.hostNextQuestion = async function() {
-            playSound('click');
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-
-            // Unfreeze players who served 1 round penalty
-            const updatedPlayers = { ...roomData.players };
-            Object.keys(updatedPlayers).forEach(uid => {
-                let p = updatedPlayers[uid];
-                if (p.frozenRound) {
-                    p.frozenRound = false;
-                    p.yellowCards = 0; // Reset after serving red card penalty
-                }
-            });
-
-            const nextQuestion = generateQuestion(roomData.category, roomData.difficulty);
-
-            await updateDoc(roomRef, {
-                players: updatedPlayers,
-                currentQuestion: nextQuestion,
-                submittedPlayer: null,
-                submittedAnswer: null,
-                isCorrect: null,
-                timerRunning: true,
-                status: 'playing'
-            });
-        };
-
-        function showReviewModal(data) {
-            const modal = document.getElementById('modal-review');
-            modal.classList.remove('hidden');
-
-            const stamp = document.getElementById('stamp-badge');
-            if (data.isCorrect) {
-                playSound('correct');
-                stamp.className = "px-6 py-2 rounded-xl text-xl sm:text-2xl font-black uppercase tracking-widest stamp-correct";
-                stamp.textContent = i18n[currentLanguage].correctStamp;
-            } else {
-                playSound('wrong');
-                stamp.className = "px-6 py-2 rounded-xl text-xl sm:text-2xl font-black uppercase tracking-widest stamp-wrong";
-                stamp.textContent = i18n[currentLanguage].wrongStamp;
-            }
-
-            document.getElementById('review-player-name').textContent = data.submittedPlayer || '--';
-            document.getElementById('review-player-answer').textContent = data.submittedAnswer || '--';
-
-            // Typewriter Step-by-Step Display
-            const stepsContainer = document.getElementById('review-solution-steps');
-            stepsContainer.innerHTML = '';
-            const stepsText = data.currentQuestion.steps.join('\n');
+function resetForNewQuestion(roomData) {
+    DOMElements.resultModal.style.display = 'none';
+    DOMElements.resultStamp.classList.remove('show');
+    if (localState.role === 'player') {
+        const myData = roomData.players[localState.playerId];
+        if(myData) {
+            // REQ 1: 玩家版面當眼處顯示名稱
+            DOMElements.playerInGameName.textContent = myData.name;
+            // REQ 2: 紅牌與黃牌邏輯
+            DOMElements.yellowCard.style.display = (myData.wrongCount === 1 && !myData.skipRound) ? 'flex' : 'none';
+            DOMElements.redCardOverlay.style.display = myData.skipRound ? 'flex' : 'none';
             
-            let charIndex = 0;
-            if (window.typewriterTimer) clearInterval(window.typewriterTimer);
-
-            window.typewriterTimer = setInterval(() => {
-                if (charIndex < stepsText.length) {
-                    stepsContainer.textContent += stepsText.charAt(charIndex);
-                    charIndex++;
-                } else {
-                    clearInterval(window.typewriterTimer);
-                    if (window.MathJax) MathJax.typesetPromise([stepsContainer]);
-                }
-            }, 30);
-
-            // Footer / Host action
-            const footerNotice = document.getElementById('review-footer-notice');
-            const hostBtn = document.getElementById('modal-review-host-btn');
-            if (currentRole === 'host') {
-                footerNotice.textContent = "";
-                hostBtn.classList.remove('hidden');
-            } else {
-                footerNotice.textContent = currentLanguage === 'zh' ? "等待主持進入下一題..." : "Waiting for host to proceed...";
-                hostBtn.classList.add('hidden');
-            }
+            DOMElements.btnSubmitAnswer.disabled = myData.skipRound;
+            if(!myData.skipRound) DOMElements.btnSubmitAnswer.classList.add('pulse');
         }
+        DOMElements.playerAnswerDisplay.textContent = '';
+    } else {
+        DOMElements.hostStatusText.textContent = "等待玩家搶答...";
+    }
+}
 
-        function showVictoryModal(data) {
-            playSound('victory');
-            document.getElementById('modal-review').classList.add('hidden');
-            const modal = document.getElementById('modal-victory');
-            modal.classList.remove('hidden');
+async function handleNextQuestion() {
+    playSfx('click');
+    const roomRef = ref(db, `rooms/${localState.roomName}`);
+    const roomData = (await get(roomRef)).val();
+    let up = {};
+    Object.keys(roomData.players||{}).forEach(id => { if (roomData.players[id].skipRound) up[`/players/${id}/skipRound`] = false; });
+    if(roomData.settings.mode === 'time' && roomData.timerState.paused) {
+        up["/timerState/paused"] = false; up["/timerState/pauseStartTime"] = null;
+        up["/timerState/totalPauseDuration"] = (roomData.timerState.totalPauseDuration||0) + (Date.now() - roomData.timerState.pauseStartTime);
+    }
+    await update(roomRef, up);
+    hostGenerateNewQuestion(roomData.settings);
+}
 
-            const sortedPlayers = Object.values(data.players || {}).sort((a, b) => b.score - a.score);
-            const winner = sortedPlayers[0] || { name: 'None', score: 0 };
+function showWinner(roomData) {
+    playSfx('win');
+    DOMElements.winnerModal.style.display = 'flex';
+    DOMElements.finalScores.innerHTML = '';
+    // REQ 5: 顯示頭三甲
+    const sorted = Object.values(roomData.players).filter(p => !p.isHost).sort((a,b) => b.score - a.score);
+    const ranks = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍'];
+    const colors = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
+    
+    sorted.slice(0, 3).forEach((p, index) => {
+        DOMElements.finalScores.innerHTML += `
+            <div class="flex justify-between items-center bg-black/40 p-4 rounded-xl mb-3 w-[350px]">
+                <div class="text-2xl font-bold ${colors[index]}">${ranks[index]}<br><span class="text-white text-lg ml-8">${p.name}</span></div>
+                <div class="text-4xl font-orbitron font-black text-yellow-300">${p.score}<span class="text-sm ml-1">pts</span></div>
+            </div>`;
+    });
+}
 
-            document.getElementById('victory-winner-name').textContent = winner.name;
-            document.getElementById('victory-winner-score').textContent = `${winner.score} Pts`;
+function handleNumpadClick(e) {
+    playSfx('click');
+    const key = e.currentTarget.dataset.key;
+    let ans = DOMElements.playerAnswerDisplay.textContent;
+    if (key === 'C') ans = '';
+    else if (key === '-' && ans.length === 0) ans = key;
+    else if (!isNaN(key)) if (ans.length < 8) ans += key;
+    DOMElements.playerAnswerDisplay.textContent = ans;
+}
 
-            const lb = document.getElementById('victory-leaderboard');
-            lb.innerHTML = sortedPlayers.map((p, idx) => `
-                <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center text-sm">
-                    <span class="font-bold text-white"><span class="text-amber-400 mr-2">#${idx+1}</span>${p.name}</span>
-                    <span class="font-black font-mono text-cyan-400">${p.score} Pts</span>
-                </div>
-            `).join('');
-        }
+async function handleSubmitAnswer() {
+    let ans = DOMElements.playerAnswerDisplay.textContent;
+    if (ans === '' || ans === '-') return;
+    playSfx('submit');
+    DOMElements.btnSubmitAnswer.disabled = true;
+    DOMElements.btnSubmitAnswer.classList.remove('pulse');
+    const qRef = ref(db, `rooms/${localState.roomName}/current_question`);
+    try {
+        const res = await runTransaction(qRef, (curr) => {
+            if (curr && !curr.submitted_by) { curr.submitted_by = localState.playerId; curr.submitted_answer = ans; return curr; }
+            return;
+        });
+        if (!res.committed) { DOMElements.btnSubmitAnswer.disabled = false; DOMElements.btnSubmitAnswer.classList.add('pulse'); }
+    } catch (e) { DOMElements.btnSubmitAnswer.disabled = false; }
+}
 
-        window.resetToHome = function() {
-            playSound('click');
-            if (roomUnsubscribe) roomUnsubscribe();
-            currentRoomId = null;
-            roomData = null;
-            showView('view-role-select');
-        };
+function updateHostModeOptions(e) {
+    DOMElements.hostModeValue.innerHTML = e.target.value === 'time' 
+        ? `<option value="180">3分鐘</option><option value="300" selected>5分鐘</option><option value="600">10分鐘</option>`
+        : `<option value="10">10分</option><option value="20" selected>20分</option><option value="30">30分</option>`;
+}
 
-        // Initialize UI Text Language
-        updateLocalizedTexts();
-    </script>
+function init() {
+    addEventListeners();
+    updateHostModeOptions({ target: DOMElements.hostGameMode });
+    navigateTo('view-role-selection');
+}
+init();
+</script>
 </body>
 </html>
