@@ -485,7 +485,9 @@ function navigateTo(viewId) {
 
 const getRand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const getNZRand = (min, max) => { let v=0; while(v===0) v=getRand(min,max); return v; };
-const fmtS = (n, showPlus=true) => n < 0 ? `(${n})` : (showPlus ? `(+${n})` : `${n}`);
+
+// 修正：當 n === 0 時直接顯示 "0"，移除 "(+0)" 或 "(-0)" 的情形
+const fmtS = (n, showPlus=true) => n === 0 ? "0" : (n < 0 ? `(${n})` : (showPlus ? `(+${n})` : `${n}`));
 
 function generateQuestion(topic, difficulty) {
     let question = '', answer = 0, stepsArr = [];
@@ -768,7 +770,7 @@ function updatePlayerScores(players) {
         DOMElements.hostPlayerScores.innerHTML += `
             <div class="flex justify-between items-center bg-slate-800 p-3 rounded-md mb-2 border border-slate-700">
                 <span class="font-bold text-lg">${p.name}</span>
-                <div class="flex items-center gap-2"><span class="text-xl drop-shadow-md">${cards}</span><span class="font-orbitron text-2xl text-yellow-400 font-bold">${p.score}</span></div>
+                <div class="flex items-center gap-2"><span class="text-xl drop-shadow-md">${cards}</span><span class="font-bold font-orbitron text-2xl text-yellow-400">${p.score}</span></div>
             </div>`;
     });
 }
@@ -884,7 +886,7 @@ async function handleNextQuestion() {
 }
 
 function showWinner(roomData) {
-    // 播放勝利與群眾歡呼音效
+    // 確保同時播放勝利與群眾歡呼音效
     playSfx('win');
     playSfx('cheer');
 
@@ -903,7 +905,7 @@ function showWinner(roomData) {
         DOMElements.finalScores.innerHTML += `
             <div class="flex justify-between items-center bg-black/40 p-4 rounded-xl mb-3 w-[100%]">
                 <div class="text-2xl font-bold ${colorClass}">${rankLabel}<br><span class="text-white text-lg ${marginClass}">${p.name}</span></div>
-                <div class="text-3xl md:text-4xl font-orbitron font-black text-yellow-300">${p.score}<span class="text-sm ml-1">pts</span></div>
+                <div class="text-3xl md:text-4xl font-bold font-orbitron text-yellow-300">${p.score}<span class="text-sm ml-1">pts</span></div>
             </div>`;
     });
 }
