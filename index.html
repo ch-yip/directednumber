@@ -621,7 +621,7 @@ async function handleJoinRoom() {
 
     localState.roomName = roomName;
     localState.playerName = playerName;
-    
+
     const playerRef = ref(db, `rooms/${roomName}/players/${localState.playerId}`);
     // 將所有比賽模式的玩家底分改為 0 分
     await set(playerRef, { name: playerName, score: 0, isReady: false, wrongCount: 0, penaltyCooldown: 0 });
@@ -899,7 +899,7 @@ function showWinner(roomData) {
         let rankLabel = index < 3 ? ranks[index] : `第 ${index + 1} 名`;
         let colorClass = index < 3 ? colors[index] : 'text-slate-400';
         let marginClass = index < 3 ? 'ml-8' : 'ml-0 mt-1';
-        
+
         DOMElements.finalScores.innerHTML += `
             <div class="flex justify-between items-center bg-black/40 p-4 rounded-xl mb-3 w-[100%]">
                 <div class="text-2xl font-bold ${colorClass}">${rankLabel}<br><span class="text-white text-lg ${marginClass}">${p.name}</span></div>
