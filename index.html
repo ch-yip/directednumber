@@ -271,7 +271,7 @@ body {
             </div>
         </div>
     </div>
-    <div id="lobby-player-list" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"></div>
+    <div id="lobby-player-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8"></div>
     <div id="lobby-player-controls" class="text-center">
         <button id="btn-player-ready" class="btn-gold text-xl md:text-2xl font-bold py-4 px-10 rounded-lg">準備 (Ready)</button>
     </div>
@@ -603,12 +603,22 @@ async function handleJoinRoom() {
     const roomName = DOMElements.playerRoomName.value.trim();
     const playerName = DOMElements.playerName.value.trim();
     if (!playerName || !roomName) { alert('請填寫完整資料！'); return; }
+    
     const roomRef = ref(db, 'rooms/' + roomName);
     const snapshot = await get(roomRef);
     if (!snapshot.exists()) { DOMElements.playerRoomError.style.display = 'block'; return; }
+    
     const roomData = snapshot.val();
     if (roomData.password && roomData.password !== DOMElements.playerRoomPassword.value.trim()) { alert('密碼錯誤！'); return; }
     if (roomData.status !== 'waiting') { alert('遊戲已開始，無法加入！'); return; }
+    
+    // 【修改點】檢查人數上限 (最多 16 人，不包含主持)
+    const playerCount = Object.values(roomData.players || {}).filter(p => !p.isHost).length;
+    if (playerCount >= 16) {
+        alert('房間人數已滿（最高上限 16 人），請稍後再試！');
+        return;
+    }
+
     localState.roomName = roomName;
     localState.playerName = playerName;
     const playerRef = ref(db, `rooms/${roomName}/players/${localState.playerId}`);
@@ -694,13 +704,24 @@ function startGame(initialRoomData) {
     sfx.bgm.play().catch(e => console.log("BGM blocked:", e));
     setupGameUI(initialRoomData.settings);
     if (localState.role === 'host' && !initialRoomData.current_question) hostGenerateNewQuestion(initialRoomData.settings);
+    
     if (localState.gameUnsubscribe) localState.gameUnsubscribe();
     localState.gameUnsubscribe = onValue(ref(db, 'rooms/' + localState.roomName), (snapshot) => {
         const roomData = snapshot.val();
         if (!roomData || roomData.status === 'finished') {
             if (localState.gameTimerInterval) clearInterval(localState.gameTimerInterval);
             sfx.bgm.pause();
-            if(roomData) showWinner(roomData);
+            
+            // 確保只觸發一次結算畫面
+            if(roomData && DOMElements.winnerModal.style.display !== 'flex') {
+                showWinner(roomData);
+                // 【修改點】遊戲結束後立即解除 Firebase 的連線監聽，把畫面「凍結」。
+                // 這樣一來，就算玩家隨後關閉瀏覽器離開房間，排行榜資料依然會留存在畫面上。
+                if (localState.gameUnsubscribe) {
+                    localState.gameUnsubscribe();
+                    localState.gameUnsubscribe = null;
+                }
+            }
             return;
         }
         updatePlayerScores(roomData.players);
@@ -711,6 +732,7 @@ function startGame(initialRoomData) {
         }
         if (qData && qData.submitted_by) handleAnswerSubmitted(roomData);
         else resetForNewQuestion(roomData);
+        
         if (localState.role === 'host' && roomData.settings.mode === 'score') {
             const winner = Object.values(roomData.players).find(p => !p.isHost && p.score >= roomData.settings.modeValue);
             if (winner) update(ref(db, `rooms/${localState.roomName}`), { status: 'finished' });
@@ -789,14 +811,9 @@ async function handleAnswerSubmitted(roomData) {
     DOMElements.btnSubmitAnswer.disabled = true;
     DOMElements.btnSubmitAnswer.classList.remove('pulse');
     const q = roomData.current_question;
-    
-    // 防呆檢查：確認提交的玩家是否還在遊戲房間內
     const sub = (roomData.players && roomData.players[q.submitted_by]) ? roomData.players[q.submitted_by] : null;
 
     if (localState.role === 'host' && typeof q.is_correct === 'undefined') {
-        
-        // 【核心修復點】：如果提交答案的玩家已經離線或資料被移除，主機將直接重置該題
-        // 讓該「幽靈提交」作廢，房間內其他玩家的按鈕就能立刻恢復運作，不會卡死
         if (!sub) {
             await update(ref(db, `rooms/${localState.roomName}/current_question`), {
                 submitted_by: null,
@@ -826,7 +843,6 @@ async function handleAnswerSubmitted(roomData) {
     } else if (typeof q.is_correct !== 'undefined') {
         if (DOMElements.resultModal.style.display === 'none') {
             DOMElements.resultModal.style.display = 'flex';
-            // 安全顯示提交者名字，若玩家已斷線顯示預設文字
             DOMElements.resultSubmitter.textContent = sub ? sub.name : "已離線玩家";
             DOMElements.resultSubmittedAnswer.textContent = q.submitted_answer;
             DOMElements.resultCorrectAnswer.textContent = q.correctAnswer;
@@ -847,9 +863,8 @@ function resetForNewQuestion(roomData) {
     DOMElements.resultModal.style.display = 'none';
     DOMElements.resultStamp.classList.remove('show');
     if (localState.role === 'player') {
-        // 確認玩家自己的連線資料是否還在 Firebase 中
         const myData = (roomData.players && roomData.players[localState.playerId]) ? roomData.players[localState.playerId] : null;
-        
+
         if (myData) {
             DOMElements.playerInGameName.textContent = myData.name;
             const isSuspended = (myData.penaltyCooldown || 0) > 0;
@@ -862,7 +877,6 @@ function resetForNewQuestion(roomData) {
                 DOMElements.btnSubmitAnswer.classList.remove('pulse');
             }
         } else {
-            // 如果玩家端發現自己被踢出房間 (斷線)，將永久鎖定他的作答權限
             DOMElements.playerInGameName.textContent = localState.playerName + " (連線已中斷)";
             DOMElements.btnSubmitAnswer.disabled = true;
             DOMElements.btnSubmitAnswer.classList.remove('pulse');
